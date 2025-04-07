@@ -22,9 +22,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # 3rd party
     'rest_framework',
     # 'rest_framework.authtoken',
+    "django_celery_results",
+
+    # user apps
     'app_api',
+    'app_kiberclub',
 ]
 
 MIDDLEWARE = [
@@ -87,6 +93,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+
+
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -120,6 +129,19 @@ CELERY_TIMEZONE = "UTC"
 
 # Хранение результатов задач в базе данных Django
 CELERY_RESULT_BACKEND = "django-db"
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ),
+}
+
 
 
 LOGGING = {
