@@ -29,7 +29,7 @@ app.conf.update(
 # Периодические задачи
 app.conf.beat_schedule = {
     "update-crm-token-every-hour": {
-        "task": "app_crm_api.services.crm_service.update_crm_token",
+        "task": "app_api.services.alfa_crm_service.update_crm_token",
         "schedule": 3300.0,  # Каждые 55 минут
     },
 }
