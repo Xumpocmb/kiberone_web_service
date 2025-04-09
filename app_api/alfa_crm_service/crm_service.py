@@ -130,7 +130,7 @@ def find_user_by_phone(phone_number: str) -> dict | None:
         )
         logger.debug(f"Данные для запроса: {data}")
 
-        response = send_request_to_crm(url=url, data=data, params=None, token=token)
+        response = send_request_to_crm(url=url, data=data, params=None)
         if response:
             logger.info(
                 f"Успешный ответ для branch={branch}, status={status}"
@@ -180,16 +180,11 @@ def find_user_by_phone(phone_number: str) -> dict | None:
     return result_answer
 
 
-def create_user_in_crm(user_data):
+def create_user_in_crm(user_data) -> dict | None:
     """
     Создание нового пользователя в CRM.
     """
     logger.info("Начинается процесс создания нового пользователя в CRM.")
-
-    token = get_crm_token()
-    if not token:
-        logger.error("Не удалось получить токен для создания пользователя.")
-        return None
 
     client_name = (
         f"{user_data['first_name']} {user_data['last_name']} | {user_data['username']}"
@@ -205,22 +200,14 @@ def create_user_in_crm(user_data):
     url = f"https://{CRM_HOSTNAME}/v2api/1/customer/create"
 
     logger.info(f"Отправка данных для создания пользователя: {data}")
-    logger.debug(f"URL для создания пользователя: {url}")
-
     try:
-        response = requests.post(
-            url, headers={**BASE_HEADERS, "X-ALFACRM-TOKEN": token}, json=data
-        )
-        logger.debug(
-            f"Получен ответ от сервера: статус {response.status_code}, тело: {response.text}"
-        )
-
-        if response.status_code == 200:
+        response: dict = send_request_to_crm(url=url, data=data, params=None)
+        if response:
             logger.info("Пользователь успешно создан.")
             return response
         else:
             logger.error(
-                f"Ошибка создания пользователя: статус {response.status_code}, тело: {response.text}"
+                f"Ошибка создания пользователя, тело: {response}"
             )
             return None
     except Exception as e:
@@ -228,7 +215,8 @@ def create_user_in_crm(user_data):
         return None
 
 
-def send_request_to_crm(url: str, data: dict, params: dict | None, token: str | None) -> dict | None:
+def send_request_to_crm(url: str, data: dict, params: dict | None) -> dict | None:
+    token = get_crm_token()
     if not token:
         logger.error("Токен отсутствует. Отмена запроса.")
         return None
@@ -262,7 +250,6 @@ def send_request_to_crm(url: str, data: dict, params: dict | None, token: str | 
             if response.status_code == 200:
                 logger.info("Запрос успешно выполнен.")
                 try:
-                    # Пытаемся преобразовать ответ в JSON
                     return response.json()
                 except json.JSONDecodeError:
                     logger.error("Ошибка декодирования JSON. Ответ: %s", response.text)
@@ -306,7 +293,7 @@ def get_client_lessons(user_crm_id: int, branch_id: int, page: int | None = None
 
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/lesson/index"
 
-    response_data = send_request_to_crm(url, data, params=None, token=token)
+    response_data = send_request_to_crm(url, data, params=None)
     if response_data:
         # Проверяем структуру ответа
         if isinstance(response_data, dict) and "total" in response_data:

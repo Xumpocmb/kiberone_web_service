@@ -34,15 +34,3 @@ app.conf.beat_schedule = {
     },
 }
 
-
-@app.task
-def update_crm_token():
-    """Задача для обновления токена в Redis."""
-    token = login_to_alfa_crm()
-    if token:
-        # Сохраняем токен в Redis с TTL 55 минут (3300 секунд)
-        redis_client = get_redis_client()
-        redis_client.set("crm_token", token, ex=3300)
-        logger.info("Токен успешно обновлен и сохранен в Redis.")
-    else:
-        logger.error("Не удалось обновить токен.")
