@@ -1,5 +1,5 @@
 from django.contrib import admin
-from app_kiberclub.models import AppUser, Client, Branch
+from app_kiberclub.models import AppUser, Client, Branch, QuestionsAnswers
 
 
 class ClientInline(admin.TabularInline):
@@ -57,3 +57,17 @@ class BranchAdmin(admin.ModelAdmin):
 
     list_display = ["name"]
     search_fields = ["name"]
+
+
+@admin.register(QuestionsAnswers)
+class QuestionsAnswersAdmin(admin.ModelAdmin):
+    """
+    Админ-класс для модели QuestionsAnswers.
+    """
+
+    list_display = ["question", "answer"]
+    search_fields = ["question", "answer"]
+
+    class Meta:
+        verbose_name = "Вопрос-Ответ"
+        verbose_name_plural = "Вопросы-Ответы"

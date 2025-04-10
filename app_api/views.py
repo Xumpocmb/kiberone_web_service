@@ -3,12 +3,16 @@ from django.shortcuts import render
 import logging
 
 from rest_framework.decorators import api_view
-from app_api.alfa_crm_service.crm_service import find_user_by_phone, create_user_in_crm, get_client_lessons
+from app_api.alfa_crm_service.crm_service import (
+    find_user_by_phone,
+    create_user_in_crm,
+    get_client_lessons,
+)
 from rest_framework import status
 from rest_framework.response import Response
 
 from app_api.utils.util_parse_date import parse_date
-from app_kiberclub.models import AppUser, Client, Branch
+from app_kiberclub.models import AppUser, Client, Branch, QuestionsAnswers
 
 logger = logging.getLogger(__name__)
 
@@ -18,21 +22,23 @@ def find_user_by_phone_view(request) -> Response:
     phone_number = request.data.get("phone_number")
     if not phone_number:
         return Response(
-            {"success": False, "message": "Номер телефона обязателен"}, status=status.HTTP_400_BAD_REQUEST)
+            {"success": False, "message": "Номер телефона обязателен"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     search_result = find_user_by_phone(phone_number)
     if search_result.get("total", 0) > 0:
         return Response(
             {
                 "success": True,
                 "message": "Пользователь найден в CRM",
-                "user": search_result}, status=status.HTTP_200_OK
+                "user": search_result,
+            },
+            status=status.HTTP_200_OK,
         )
     else:
         return Response(
-            {
-                "success": False,
-                "message": "Пользователь не найден в CRM",
-                "user": None}, status=status.HTTP_404_NOT_FOUND
+            {"success": False, "message": "Пользователь не найден в CRM", "user": None},
+            status=status.HTTP_404_NOT_FOUND,
         )
 
 
@@ -46,9 +52,7 @@ def register_user_in_crm_view(request) -> Response:
     if not all(field in user_data for field in required_fields):
         logger.error("Не все обязательные поля указаны")
         return Response(
-            {
-                "success": False,
-                "message": "Не все обязательные поля указаны"},
+            {"success": False, "message": "Не все обязательные поля указаны"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -57,16 +61,17 @@ def register_user_in_crm_view(request) -> Response:
     if result:
         logger.info("Пользователь успешно зарегистрирован в CRM")
         return Response(
-            {"success": True,
-             "message": "Пользователь успешно зарегистрирован в CRM",
-             "data": result}, status=status.HTTP_201_CREATED
+            {
+                "success": True,
+                "message": "Пользователь успешно зарегистрирован в CRM",
+                "data": result,
+            },
+            status=status.HTTP_201_CREATED,
         )
     else:
         logger.error("Ошибка при регистрации в CRM")
         return Response(
-            {
-                "success": False,
-                "message": "Ошибка при регистрации в CRM"},
+            {"success": False, "message": "Ошибка при регистрации в CRM"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -77,9 +82,8 @@ def find_user_in_db_view(request) -> Response:
     telegram_id = request.data.get("telegram_id")
     if not telegram_id:
         return Response(
-            {
-                "success": False,
-                "message": "telegram_id обязателен"}, status=status.HTTP_400_BAD_REQUEST
+            {"success": False, "message": "telegram_id обязателен"},
+            status=status.HTTP_400_BAD_REQUEST,
         )
     try:
         user = AppUser.objects.filter(telegram_id=telegram_id).first()
@@ -102,7 +106,7 @@ def find_user_in_db_view(request) -> Response:
             return Response({"success": False}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response(
-            {"message": f"Ошибка при поиске пользователя: {str(e)}"},
+            {"success": False, "message": f"Ошибка при поиске пользователя: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -122,8 +126,9 @@ def register_user_in_db_view(request) -> Response:
             return Response(
                 {
                     "success": False,
-                    "message": "Необходимо указать telegram_id, username и phone_number"},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    "message": "Необходимо указать telegram_id, username и phone_number",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         user, created = AppUser.objects.get_or_create(
@@ -153,17 +158,21 @@ def register_user_in_db_view(request) -> Response:
                 {
                     "success": False,
                     "message": "Пользователь уже зарегистрирован в базе данных",
-                }, status=status.HTTP_200_OK,
+                },
+                status=status.HTTP_200_OK,
             )
     except Exception as e:
         return Response(
             {
                 "success": False,
-                "message": f"Ошибка на сервере при регистрации пользователя: {str(e)}"},
+                "message": f"Ошибка на сервере при регистрации пользователя: {str(e)}",
+            },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+
 # ------------------- DB CLIENTS --------------------
+
 
 @api_view(["POST"])
 def create_or_update_clients_in_db_view(request) -> Response:
@@ -177,8 +186,10 @@ def create_or_update_clients_in_db_view(request) -> Response:
         if not user_id or not isinstance(crm_items, list):
             logger.error("Отсутствуют обязательные поля: user_id или crm_items")
             return Response(
-                {"success": False,
-                    "message": "Необходимо указать user_id и список crm_items"},
+                {
+                    "success": False,
+                    "message": "Необходимо указать user_id и список crm_items",
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -189,7 +200,8 @@ def create_or_update_clients_in_db_view(request) -> Response:
             return Response(
                 {
                     "success": False,
-                    "message": "Пользователь с указанным user_id не найден в базе данных"},
+                    "message": "Пользователь с указанным user_id не найден в базе данных",
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -266,9 +278,7 @@ def create_or_update_clients_in_db_view(request) -> Response:
     except Exception as e:
         logger.error(f"Внутренняя ошибка сервера: {str(e)}")
         return Response(
-            {
-                "success": False,
-                "message": f"Внутренняя ошибка сервера: {str(e)}"},
+            {"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -298,3 +308,50 @@ def update_bot_user_status(user):
 
     user.save()
     logger.info(f"Статус пользователя {user.id} обновлен: {user.status}")
+
+
+@api_view(["GET"])
+def get_all_questions(request):
+    """
+    Получение списка всех вопросов.
+    """
+    try:
+        questions = QuestionsAnswers.objects.all()
+        data = [{"id": qa.id, "question": qa.question} for qa in questions]
+        return Response(
+            {"success": True, "data": data},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка при получении вопросов: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def get_answer_by_question_id(request, question_id):
+    """
+    Получение ответа на вопрос по его ID.
+    """
+    try:
+        qa = QuestionsAnswers.objects.get(id=question_id)
+        data = {
+            "id": qa.id,
+            "question": qa.question,
+            "answer": qa.answer,
+        }
+        return Response(
+            {"success": True, "data": data},
+            status=status.HTTP_200_OK,
+        )
+    except QuestionsAnswers.DoesNotExist:
+        return Response(
+            {"success": False, "message": "Вопрос не найден"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка при получении ответа: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

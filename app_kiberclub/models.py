@@ -1,12 +1,32 @@
 from django.db import models
 
+
 class Branch(models.Model):
     """
     Модель филиала.
     """
-    branch_id = models.CharField(max_length=100, unique=True, blank=True, null=True, verbose_name="ID филиала в ЦРМ")
-    name = models.CharField(max_length=100, unique=True, blank=True, null=True, verbose_name="Название филиала")
-    sheet_url = models.CharField(max_length=100, unique=True, blank=True, null=True, verbose_name="Ссылка на таблицу")
+
+    branch_id = models.CharField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="ID филиала в ЦРМ",
+    )
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="Название филиала",
+    )
+    sheet_url = models.CharField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="Ссылка на таблицу",
+    )
 
     def __str__(self):
         return self.name
@@ -19,9 +39,23 @@ class Branch(models.Model):
 
 class Location(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, verbose_name="Филиал")
-    name = models.CharField(max_length=100, unique=True, blank=True, null=True, verbose_name="Название Локации")
-    sheet_name = models.CharField(max_length=100, unique=True, blank=True, null=True, verbose_name="Название листа в таблице")
-    map_url = models.CharField(max_length=100, blank=True, null=True, verbose_name="Ссылка на карту")
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="Название Локации",
+    )
+    sheet_name = models.CharField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="Название листа в таблице",
+    )
+    map_url = models.CharField(
+        max_length=100, blank=True, null=True, verbose_name="Ссылка на карту"
+    )
 
     def __str__(self):
         return f"{self.name} (Филиал: {self.branch.name})"
@@ -36,6 +70,7 @@ class AppUser(models.Model):
     """
     Модель пользователя (родителя).
     """
+
     CLIENT_STATUS = (
         ("0", "Lead"),
         ("1", "Lead with group"),
@@ -118,3 +153,14 @@ class Client(models.Model):
         verbose_name = "Клиент"
         verbose_name_plural = "Клиенты"
 
+
+class QuestionsAnswers(models.Model):
+    question = models.CharField(
+        max_length=255, blank=True, null=True, verbose_name="Вопрос"
+    )
+    answer = models.CharField(blank=True, null=True, verbose_name="Ответ")
+
+    class Meta:
+        db_table = "questions_answers"
+        verbose_name = "Вопрос-Ответ"
+        verbose_name_plural = "Вопросы-Ответы"
