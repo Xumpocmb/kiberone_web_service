@@ -164,3 +164,49 @@ class QuestionsAnswers(models.Model):
         db_table = "questions_answers"
         verbose_name = "Вопрос-Ответ"
         verbose_name_plural = "Вопросы-Ответы"
+    
+    
+    def __str__(self):
+        return f"{self.question}"
+
+
+class EripPaymentHelp(models.Model):
+    erip_link = models.CharField(
+        max_length=355, blank=True, null=True, verbose_name="Ссылка")
+    erip_instructions = models.CharField(
+        max_length=1355, blank=True, null=True, verbose_name="Инструкция")
+
+    class Meta:
+        db_table = "erip_payment_help"
+        verbose_name = "Помощь в оплате ЕРИП"
+        verbose_name_plural = "Помощь в оплате ЕРИП"
+
+
+class PartnerCategory(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Название")
+
+    class Meta:
+        db_table = "client_bonus_category"
+        verbose_name = "Категория бонуса клиента (промокоды)"
+        verbose_name_plural = "Категории бонусов клиента (промокоды)"
+        
+    
+    def __str__(self):
+        return f"{self.name}"
+
+
+class PartnerClientBonus(models.Model):
+    category = models.ForeignKey(
+        PartnerCategory, on_delete=models.CASCADE, verbose_name="Категория"
+    )
+    partner_name = models.CharField(max_length=155, verbose_name="Название партнера")
+    description = models.CharField(verbose_name="Описание", null=True, blank=True)
+    code = models.CharField(max_length=155, verbose_name="Промо-код", null=True, blank=True)
+
+    class Meta:
+        db_table = "client_bonus"
+        verbose_name = "Партнер и его бонус (промокод)"
+        verbose_name_plural = "Партнеры и их бонусы (промокоды)"
+
+    def __str__(self):
+        return f"{self.partner_name} - {self.category}"

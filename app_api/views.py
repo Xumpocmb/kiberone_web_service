@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from app_api.utils.util_parse_date import parse_date
-from app_kiberclub.models import AppUser, Client, Branch, QuestionsAnswers
+from app_kiberclub.models import AppUser, Client, Branch, EripPaymentHelp, PartnerCategory, PartnerClientBonus, QuestionsAnswers
 
 logger = logging.getLogger(__name__)
 
@@ -353,5 +353,130 @@ def get_answer_by_question_id(request, question_id):
     except Exception as e:
         return Response(
             {"success": False, "message": f"Ошибка при получении ответа: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def get_erip_payment_help(request):
+    """
+    Получение инструкции по оплате через ЕРИП.
+    """
+    try:
+        help_data = EripPaymentHelp.objects.first()
+        if help_data:
+            return Response(
+                {
+                    "success": True,
+                    "data": {
+                        "erip_link": help_data.erip_link,
+                        "erip_instructions": help_data.erip_instructions,
+                    },
+                },
+                status=200,
+            )
+        else:
+            return Response(
+                {"success": False, "message": "Инструкция не найдена"},
+                status=404,
+            )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=500,
+        )
+
+
+@api_view(["GET"])
+def get_partner_categories_view(request) -> Response:
+    """
+    Получение списка всех категорий партнеров.
+    """
+    try:
+        categories = PartnerCategory.objects.all()
+        data = [
+            {
+                "id": category.id,
+                "name": category.name,
+            }
+            for category in categories
+        ]
+        logger.info("Категории партнеров успешно получены.")
+        return Response(
+            {"success": True, "data": data},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        logger.error(f"Ошибка при получении категорий: {str(e)}")
+        return Response(
+            {"success": False, "message": "Ошибка сервера при получении категорий."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def get_partners_by_category_view(request, category_id: int) -> Response:
+    """
+    Получение списка партнеров и их бонусов по ID категории.
+    """
+    try:
+        partners = PartnerClientBonus.objects.filter(category_id=category_id)
+        data = [
+            {
+                "id": partner.id,
+                "partner_name": partner.partner_name,
+                "description": partner.description,
+                "code": partner.code,
+            }
+            for partner in partners
+        ]
+        logger.info(f"Партнеры категории {category_id} успешно получены.")
+        return Response(
+            {"success": True, "data": data},
+            status=status.HTTP_200_OK,
+        )
+    except PartnerCategory.DoesNotExist:
+        logger.error(f"Категория с ID={category_id} не найдена.")
+        return Response(
+            {"success": False, "message": "Категория не найдена."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        logger.error(f"Ошибка при получении партнеров: {str(e)}")
+        return Response(
+            {"success": False, "message": "Ошибка сервера при получении партнеров."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def get_partner_by_id_view(request, partner_id: int) -> Response:
+    """
+    Получение информации о партнере по его ID.
+    """
+    try:
+        partner = PartnerClientBonus.objects.get(id=partner_id)
+        data = {
+            "id": partner.id,
+            "partner_name": partner.partner_name,
+            "description": partner.description,
+            "code": partner.code,
+            "category": partner.category.id,
+        }
+        logger.info(f"Информация о партнере {partner_id} успешно получена.")
+        return Response(
+            {"success": True, "data": data},
+            status=status.HTTP_200_OK,
+        )
+    except PartnerClientBonus.DoesNotExist:
+        logger.error(f"Партнер с ID={partner_id} не найден.")
+        return Response(
+            {"success": False, "message": "Партнер не найден."},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+    except Exception as e:
+        logger.error(f"Ошибка при получении партнера: {str(e)}")
+        return Response(
+            {"success": False, "message": "Ошибка сервера при получении партнера."},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

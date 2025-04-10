@@ -1,5 +1,13 @@
 from django.contrib import admin
-from app_kiberclub.models import AppUser, Client, Branch, QuestionsAnswers
+from app_kiberclub.models import (
+    AppUser,
+    Client,
+    Branch,
+    QuestionsAnswers,
+    EripPaymentHelp,
+    PartnerCategory,
+    PartnerClientBonus,
+)
 
 
 class ClientInline(admin.TabularInline):
@@ -71,3 +79,31 @@ class QuestionsAnswersAdmin(admin.ModelAdmin):
     class Meta:
         verbose_name = "Вопрос-Ответ"
         verbose_name_plural = "Вопросы-Ответы"
+
+
+@admin.register(EripPaymentHelp)
+class EripPaymentHelpAdmin(admin.ModelAdmin):
+    """
+    Админ-класс для модели EripPaymentHelp.
+    """
+
+    list_display = ["erip_link", "erip_instructions"]
+    search_fields = ["erip_link", "erip_instructions"]
+
+
+@admin.register(PartnerCategory)
+class PartnerCategoryAdmin(admin.ModelAdmin):
+    """
+    Админ-класс для модели PartnerCategory.
+    """
+
+    list_display = ["name"]
+
+@admin.register(PartnerClientBonus)
+class PartnerClientBonusAdmin(admin.ModelAdmin):
+    """
+    Админ-класс для модели PartnerClientBonus.
+    """
+
+    list_display = ["partner_name", "category"]
+    search_fields = ["partner_name"]
