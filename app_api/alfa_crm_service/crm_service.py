@@ -293,9 +293,8 @@ def get_client_lessons(user_crm_id: int, branch_id: int, page: int | None = None
 
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/lesson/index"
 
-    response_data = send_request_to_crm(url, data, params=None)
+    response_data: dict | None = send_request_to_crm(url, data, params=None)
     if response_data:
-        # Проверяем структуру ответа
         if isinstance(response_data, dict) and "total" in response_data:
             logger.info(f"Получено уроков: {response_data.get('total')}")
             return response_data
