@@ -37,8 +37,40 @@ class Branch(models.Model):
         verbose_name_plural = "Филиалы"
 
 
+class Manager(models.Model):
+    name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Имя")
+    telegram_link = models.CharField(
+        max_length=100,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="Телеграм ссылка",
+    )
+    locations = models.ManyToManyField(
+        "Location",
+        related_name="managers",
+        verbose_name="Локации",
+        blank=True,
+    )
+
+    def __str__(self):
+        return f"Менеджер {self.name}"
+
+    class Meta:
+        db_table = "managers"
+        verbose_name = "Менеджер"
+        verbose_name_plural = "Менеджеры"
+
+
 class Location(models.Model):
     branch = models.ForeignKey(Branch, on_delete=models.CASCADE, verbose_name="Филиал")
+    location_crm_id = models.CharField(
+        max_length=3,
+        unique=True,
+        blank=True,
+        null=True,
+        verbose_name="ID локации в ЦРМ",
+    )
     name = models.CharField(
         max_length=100,
         unique=True,
@@ -56,9 +88,17 @@ class Location(models.Model):
     map_url = models.CharField(
         max_length=100, blank=True, null=True, verbose_name="Ссылка на карту"
     )
+    location_manager = models.ForeignKey(
+        Manager,
+        on_delete=models.SET_NULL,
+        related_name="managed_locations",
+        verbose_name="Менеджер",
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
-        return f"{self.name} (Филиал: {self.branch.name})"
+        return f"{self.location_crm_id} - {self.name} (Филиал: {self.branch.name})"
 
     class Meta:
         db_table = "locations"
@@ -152,10 +192,6 @@ class Client(models.Model):
         db_table = "clients"
         verbose_name = "Клиент"
         verbose_name_plural = "Клиенты"
-
-
-class Manager(models.Model):
-    pass
 
 
 class SalesManager(models.Model):

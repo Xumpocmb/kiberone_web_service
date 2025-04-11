@@ -287,7 +287,7 @@ def get_client_lessons(user_crm_id: int, branch_id: int, page: int | None = None
     data = {
         "customer_id": user_crm_id,
         "status": lesson_status,  # 1 - запланирован урок, 2 - отменен, 3 - проведен
-        "lesson_type_id": lesson_type,  # 3 - пробник, 2 - групповой
+        "lesson_type_id": lesson_type,  # 3 - пробный, 2 - групповой
         "page": 0 if page is None else page,
     }
 
@@ -304,3 +304,5 @@ def get_client_lessons(user_crm_id: int, branch_id: int, page: int | None = None
     else:
         logger.warning(f"Не удалось получить данные уроков")
         return {"total": 0}
+
+

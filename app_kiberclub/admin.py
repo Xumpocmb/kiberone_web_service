@@ -10,6 +10,8 @@ from app_kiberclub.models import (
     ClientBonus,
     SalesManager,
     SocialLink,
+    Location,
+    Manager,
 )
 
 
@@ -135,3 +137,15 @@ class SalesManagerAdmin(admin.ModelAdmin):
 @admin.register(SocialLink)
 class SocialLinkAdmin(admin.ModelAdmin):
     list_display = ("name", "link")
+
+
+@admin.register(Location)
+class LocationAdmin(admin.ModelAdmin):
+    list_display = ("name", "branch")
+    list_filter = ["branch"]
+
+
+@admin.register(Manager)
+class ManagerAdmin(admin.ModelAdmin):
+    list_display = ("name", "telegram_link")
+    filter_horizontal = ("locations",)

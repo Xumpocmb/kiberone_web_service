@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from app_api.utils.util_parse_date import parse_date
-from app_kiberclub.models import AppUser, Client, Branch, ClientBonus, EripPaymentHelp, PartnerCategory, PartnerClientBonus, QuestionsAnswers, SalesManager, SocialLink
+from app_kiberclub.models import AppUser, Client, Branch, ClientBonus, EripPaymentHelp, Location, PartnerCategory, PartnerClientBonus, QuestionsAnswers, SalesManager, SocialLink
 
 logger = logging.getLogger(__name__)
 
@@ -187,6 +187,7 @@ def get_clients_by_user(request, user_id: int):
                 "name": client.name,
                 "branch_name": client.branch.name,
                 "branch_id": client.branch.branch_id,
+                "crm_id": client.crm_id,
                 "is_study": client.is_study,
                 "dob": client.dob,
                 "balance": client.balance,
@@ -622,6 +623,80 @@ def get_social_links(request):
             }
             for link in links
         ]
+        return Response(
+            {"success": True, "data": data},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["POST"])
+def get_user_lessons_view(request) -> Response:
+    """
+    Получение уроков пользователя по его CRM ID и branch_id.
+    """
+    try:
+        user_crm_id = request.data.get("user_crm_id")
+        branch_id = request.data.get("branch_id")
+        lesson_status = request.data.get(
+            "lesson_status", 1
+        )  # По умолчанию запланированные
+        lesson_type = request.data.get("lesson_type", 2)  # По умолчанию групповые
+
+        if not user_crm_id or not branch_id:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Необходимо указать user_crm_id и branch_id",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        lessons_data = get_client_lessons(
+            user_crm_id, branch_id, lesson_status=lesson_status, lesson_type=lesson_type
+        )
+        if lessons_data and lessons_data.get("total", 0) > 0:
+            return Response(
+                {"success": True, "data": lessons_data},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"success": False, "message": "Уроки не найдены"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def get_location_by_id(request, location_id: int):
+    """
+    Получение локации по room_id.
+    """
+    try:
+        location = Location.objects.filter(location_crm_id=location_id).first()
+        if not location:
+            return Response(
+                {"success": False, "message": "Локация не найдена."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        data = {
+            "id": location.id,
+            "branch_id": location.branch.id if location.branch else None,
+            "name": location.name,
+            "sheet_name": location.sheet_name,
+            "location_manager_id": location.location_manager,
+            "map_url": location.map_url,
+        }
         return Response(
             {"success": True, "data": data},
             status=status.HTTP_200_OK,

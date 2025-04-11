@@ -5,8 +5,10 @@ from app_api.views import (
     get_bonus_by_id_view,
     get_client_bonuses,
     get_clients_by_user,
+    get_location_by_id,
     get_sales_managers_by_branch,
     get_social_links,
+    get_user_lessons_view,
     register_user_in_db_view,
     register_user_in_crm_view,
     create_or_update_clients_in_db_view,
@@ -77,4 +79,10 @@ urlpatterns = [
         name="get_clients_by_user",
     ),
     path("get_social_links/", get_social_links, name="get_social_links"),
+    path("get_user_lessons/", get_user_lessons_view, name="get_user_lessons"),
+    path(
+        "get_location_by_id/<int:location_id>/",
+        get_location_by_id,
+        name="get_location_by_id",
+    ),
 ]
