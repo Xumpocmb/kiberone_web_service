@@ -2,6 +2,11 @@ from django.urls import path
 from app_api.views import (
     find_user_by_phone_view,
     find_user_in_db_view,
+    get_bonus_by_id_view,
+    get_client_bonuses,
+    get_clients_by_user,
+    get_sales_managers_by_branch,
+    get_social_links,
     register_user_in_db_view,
     register_user_in_crm_view,
     create_or_update_clients_in_db_view,
@@ -55,4 +60,21 @@ urlpatterns = [
         get_partner_by_id_view,
         name="get_partner_by_id",
     ),
+    path("get_client_bonuses/", get_client_bonuses, name="get_client_bonuses"),
+    path(
+        "get_bonus_by_id/<int:bonus_id>/",
+        get_bonus_by_id_view,
+        name="get_bonus_by_id",
+    ),
+    path(
+        "get_sales_managers_by_branch/<int:branch_id>/",
+        get_sales_managers_by_branch,
+        name="get_sales_managers_by_branch",
+    ),
+    path(
+        "get_clients_by_user/<int:user_id>/",
+        get_clients_by_user,
+        name="get_clients_by_user",
+    ),
+    path("get_social_links/", get_social_links, name="get_social_links"),
 ]

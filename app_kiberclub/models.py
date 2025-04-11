@@ -154,6 +154,31 @@ class Client(models.Model):
         verbose_name_plural = "Клиенты"
 
 
+class Manager(models.Model):
+    pass
+
+
+class SalesManager(models.Model):
+    name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Имя")
+    telegram_link = models.CharField(
+        max_length=100, unique=True, blank=True, null=True, verbose_name="Телеграм ссылка"
+    )
+    branches = models.ManyToManyField(
+        Branch,
+        related_name="sales_managers",
+        verbose_name="Филиалы",
+        blank=True,
+    )
+
+    class Meta:
+        db_table = "sales_managers"
+        verbose_name = "Менеджер по продажам"
+        verbose_name_plural = "Менеджеры по продажам"
+
+    def __str__(self):
+        return f"Менеджер по продажам {self.name}"
+
+
 class QuestionsAnswers(models.Model):
     question = models.CharField(
         max_length=255, blank=True, null=True, verbose_name="Вопрос"
@@ -186,11 +211,10 @@ class PartnerCategory(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название")
 
     class Meta:
-        db_table = "client_bonus_category"
-        verbose_name = "Категория бонуса клиента (промокоды)"
-        verbose_name_plural = "Категории бонусов клиента (промокоды)"
-        
-    
+        db_table = "partner_bonus_category"
+        verbose_name = "Категория партнерского бонуса"
+        verbose_name_plural = "Категории партнерских бонусов клиента"
+
     def __str__(self):
         return f"{self.name}"
 
@@ -204,9 +228,29 @@ class PartnerClientBonus(models.Model):
     code = models.CharField(max_length=155, verbose_name="Промо-код", null=True, blank=True)
 
     class Meta:
-        db_table = "client_bonus"
+        db_table = "partner_bonus"
         verbose_name = "Партнер и его бонус (промокод)"
         verbose_name_plural = "Партнеры и их бонусы (промокоды)"
 
     def __str__(self):
         return f"{self.partner_name} - {self.category}"
+
+
+class ClientBonus(models.Model):
+    bonus = models.CharField(max_length=255, verbose_name="Бонус")
+    description = models.CharField(max_length=255, verbose_name="Описание")
+    
+    class Meta:
+        db_table = "client_bonus"
+        verbose_name = "Бонус для клиента"
+        verbose_name_plural = "Бонусы для клиента"
+
+
+class SocialLink(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Название")
+    link = models.CharField(max_length=255, verbose_name="Ссылка")
+
+    class Meta:
+        db_table = "social_links"
+        verbose_name = "Социальная ссылка"
+        verbose_name_plural = "Социальные ссылки"

@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.response import Response
 
 from app_api.utils.util_parse_date import parse_date
-from app_kiberclub.models import AppUser, Client, Branch, EripPaymentHelp, PartnerCategory, PartnerClientBonus, QuestionsAnswers
+from app_kiberclub.models import AppUser, Client, Branch, ClientBonus, EripPaymentHelp, PartnerCategory, PartnerClientBonus, QuestionsAnswers, SalesManager, SocialLink
 
 logger = logging.getLogger(__name__)
 
@@ -172,6 +172,42 @@ def register_user_in_db_view(request) -> Response:
 
 
 # ------------------- DB CLIENTS --------------------
+
+
+@api_view(["GET"])
+def get_clients_by_user(request, user_id: int):
+    """
+    Получение списка клиентов для указанного пользователя.
+    """
+    try:
+        clients = Client.objects.filter(user_id=user_id)
+        data = [
+            {
+                "id": client.id,
+                "name": client.name,
+                "branch_name": client.branch.name,
+                "branch_id": client.branch.branch_id,
+                "is_study": client.is_study,
+                "dob": client.dob,
+                "balance": client.balance,
+                "paid_count": client.paid_count,
+                "next_lesson_date": client.next_lesson_date,
+                "paid_till": client.paid_till,
+                "note": client.note,
+                "paid_lesson_count": client.paid_lesson_count,
+                "has_scheduled_lessons": client.has_scheduled_lessons,
+            }
+            for client in clients
+        ]
+        return Response(
+            {"success": True, "data": data},
+            status=200,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=500,
+        )
 
 
 @api_view(["POST"])
@@ -478,5 +514,120 @@ def get_partner_by_id_view(request, partner_id: int) -> Response:
         logger.error(f"Ошибка при получении партнера: {str(e)}")
         return Response(
             {"success": False, "message": "Ошибка сервера при получении партнера."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def get_client_bonuses(request):
+    """
+    Получение списка всех бонусов для клиентов.
+    """
+    try:
+        bonuses = ClientBonus.objects.all()
+        data = [
+            {
+                "id": bonus.id,
+                "bonus": bonus.bonus,
+                "description": bonus.description,
+            }
+            for bonus in bonuses
+        ]
+        return Response(
+            {"success": True, "data": data},
+            status=200,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=500,
+        )
+
+
+@api_view(["GET"])
+def get_bonus_by_id_view(request, bonus_id: int) -> Response:
+    """
+    Получение информации о бонусе по его ID.
+    """
+    try:
+        bonus = ClientBonus.objects.get(id=bonus_id)
+        data = {
+            "id": bonus.id,
+            "bonus": bonus.bonus,
+            "description": bonus.description,
+        }
+        return Response(
+            {"success": True, "data": data},
+            status=200,
+        )
+    except ClientBonus.DoesNotExist:
+        return Response(
+            {"success": False, "message": "Бонус не найден."},
+            status=404,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=500,
+        )
+
+
+@api_view(["GET"])
+def get_sales_managers_by_branch(request, branch_id: int):
+    """
+    Получение списка менеджеров по продажам для указанного филиала.
+    """
+    try:
+        # Проверяем, существует ли филиал
+        branch = Branch.objects.filter(id=branch_id).first()
+        if not branch:
+            return Response(
+                {"success": False, "message": "Филиал не найден."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Получаем всех менеджеров, связанных с этим филиалом
+        managers = branch.sales_managers.all()  # Используем related_name из модели
+        data = [
+            {
+                "id": manager.id,
+                "name": manager.name,
+                "telegram_link": manager.telegram_link,
+            }
+            for manager in managers
+        ]
+        return Response(
+            {"success": True, "data": data},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def get_social_links(request):
+    """
+    Получение списка всех социальных ссылок.
+    """
+    try:
+        links = SocialLink.objects.all()
+        data = [
+            {
+                "id": link.id,
+                "name": link.name,
+                "link": link.link,
+            }
+            for link in links
+        ]
+        return Response(
+            {"success": True, "data": data},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

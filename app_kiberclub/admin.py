@@ -7,6 +7,9 @@ from app_kiberclub.models import (
     EripPaymentHelp,
     PartnerCategory,
     PartnerClientBonus,
+    ClientBonus,
+    SalesManager,
+    SocialLink,
 )
 
 
@@ -107,3 +110,28 @@ class PartnerClientBonusAdmin(admin.ModelAdmin):
 
     list_display = ["partner_name", "category"]
     search_fields = ["partner_name"]
+
+
+@admin.register(ClientBonus)
+class ClientBonusAdmin(admin.ModelAdmin):
+    """
+    Админ-класс для модели ClientBonus.
+    """
+
+    list_display = ["bonus"]
+
+
+@admin.register(SalesManager)
+class SalesManagerAdmin(admin.ModelAdmin):
+    list_display = ("name", "telegram_link", "get_branches")  # Отображение филиалов
+    filter_horizontal = ("branches",)  # Удобный виджет для управления филиалами
+
+    def get_branches(self, obj):
+        return ", ".join([branch.name for branch in obj.branches.all()])
+
+    get_branches.short_description = "Филиалы"
+
+
+@admin.register(SocialLink)
+class SocialLinkAdmin(admin.ModelAdmin):
+    list_display = ("name", "link")
