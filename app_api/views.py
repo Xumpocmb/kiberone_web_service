@@ -191,7 +191,6 @@ def get_clients_by_user(request, user_id: int):
                 "is_study": client.is_study,
                 "dob": client.dob,
                 "balance": client.balance,
-                "paid_count": client.paid_count,
                 "next_lesson_date": client.next_lesson_date,
                 "paid_till": client.paid_till,
                 "note": client.note,
@@ -283,7 +282,6 @@ def create_or_update_clients_in_db_view(request) -> Response:
                     "name": item.get("name"),
                     "dob": parse_date(item.get("dob")),
                     "balance": item.get("balance"),
-                    "paid_count": item.get("paid_count"),
                     "next_lesson_date": parse_date(item.get("next_lesson_date")),
                     "paid_till": parse_date(item.get("paid_till")),
                     "note": item.get("note"),
@@ -696,6 +694,42 @@ def get_location_by_id(request, location_id: int):
             "sheet_name": location.sheet_name,
             "location_manager_id": location.location_manager,
             "map_url": location.map_url,
+        }
+        return Response(
+            {"success": True, "data": data},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def get_manager_by_room_id(request, room_id: int):
+    """
+    Получение менеджера по room_id.
+    """
+    try:
+        location = Location.objects.filter(location_crm_id=room_id).first()
+        if not location:
+            return Response(
+                {"success": False, "message": "Локация не найдена."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        manager = location.managers.first()
+        if not manager:
+            return Response(
+                {"success": False, "message": "Менеджер для локации не найден."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        data = {
+            "id": manager.id,
+            "name": manager.name,
+            "telegram_link": manager.telegram_link,
         }
         return Response(
             {"success": True, "data": data},

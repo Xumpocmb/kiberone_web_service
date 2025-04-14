@@ -141,7 +141,7 @@ class SocialLinkAdmin(admin.ModelAdmin):
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
-    list_display = ("name", "branch")
+    list_display = ("branch", "name", "location_crm_id")
     list_filter = ["branch"]
 
 

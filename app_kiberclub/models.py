@@ -170,9 +170,6 @@ class Client(models.Model):
     balance = models.DecimalField(
         max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Баланс"
     )
-    paid_count = models.IntegerField(
-        blank=True, null=True, verbose_name="Количество оплаченных занятий"
-    )
     next_lesson_date = models.DateTimeField(
         blank=True, null=True, verbose_name="Дата следующего занятия"
     )
@@ -225,8 +222,7 @@ class QuestionsAnswers(models.Model):
         db_table = "questions_answers"
         verbose_name = "Вопрос-Ответ"
         verbose_name_plural = "Вопросы-Ответы"
-    
-    
+
     def __str__(self):
         return f"{self.question}"
 
@@ -275,7 +271,7 @@ class PartnerClientBonus(models.Model):
 class ClientBonus(models.Model):
     bonus = models.CharField(max_length=255, verbose_name="Бонус")
     description = models.CharField(max_length=255, verbose_name="Описание")
-    
+
     class Meta:
         db_table = "client_bonus"
         verbose_name = "Бонус для клиента"
