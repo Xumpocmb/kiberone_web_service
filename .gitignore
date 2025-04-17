@@ -133,3 +133,5 @@ db.sqlite3
 
 
 info.txt
+
+*.json
