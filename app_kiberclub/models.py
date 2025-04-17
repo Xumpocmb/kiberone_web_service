@@ -46,12 +46,6 @@ class Manager(models.Model):
         null=True,
         verbose_name="Телеграм ссылка",
     )
-    locations = models.ManyToManyField(
-        "Location",
-        related_name="managers",
-        verbose_name="Локации",
-        blank=True,
-    )
 
     def __str__(self):
         return f"Менеджер {self.name}"

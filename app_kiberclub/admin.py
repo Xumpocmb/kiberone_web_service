@@ -148,4 +148,3 @@ class LocationAdmin(admin.ModelAdmin):
 @admin.register(Manager)
 class ManagerAdmin(admin.ModelAdmin):
     list_display = ("name", "telegram_link")
-    filter_horizontal = ("locations",)
