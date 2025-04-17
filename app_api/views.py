@@ -11,6 +11,7 @@ from app_api.alfa_crm_service.crm_service import (
 from rest_framework import status
 from rest_framework.response import Response
 
+from app_api.utils.util_erip import set_pay
 from app_api.utils.util_parse_date import parse_date
 from app_kiberclub.models import AppUser, Client, Branch, ClientBonus, EripPaymentHelp, Location, PartnerCategory, PartnerClientBonus, QuestionsAnswers, SalesManager, SocialLink
 
@@ -791,3 +792,54 @@ def get_user_balances(request) -> Response:
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+
+
+@api_view(["POST"])
+def get_client_payment_data(request) -> Response:
+    try:
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response(
+                {"success": False, "message": "user_id обязателен"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Находим пользователя
+        user = AppUser.objects.filter(id=user_id).first()
+        if not user:
+            return Response(
+                {"success": False, "message": "Пользователь не найден"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Получаем клиентов пользователя
+        clients = Client.objects.filter(user=user)
+        if not clients.exists():
+            return Response(
+                {"success": False, "message": "У пользователя нет клиентов"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Формируем данные о балансе для каждого клиента
+        clients_data = [
+            {
+                "crm_id": client.crm_id,
+                "branch_id": client.branch_id,
+                "balance": float(client.balance) if client.balance else 0.0,
+            }
+            for client in clients
+        ]
+
+        payment_data = []
+        for client_data in clients_data:
+            payment_data.append(set_pay(client_data))
+
+        return Response(
+            {"success": True, "data": payment_data},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

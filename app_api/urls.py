@@ -17,7 +17,7 @@ from app_api.views import (
     get_erip_payment_help,
     get_partner_categories_view,
     get_partners_by_category_view,
-    get_partner_by_id_view, get_manager_by_room_id, get_user_balances,
+    get_partner_by_id_view, get_manager_by_room_id, get_user_balances, get_payment_data_from_api,
 )
 
 app_name = "app_crm_api"
@@ -44,4 +44,5 @@ urlpatterns = [
     path("get_manager_by_room_id/<int:room_id>/", get_manager_by_room_id, name="get_manager_by_room_id"),
     path("get_user_balances/", get_user_balances, name="get_user_balances"),
 
+    path("get_client_payment_data/", get_client_payment_data, name="get_client_payment_data"),
 ]
