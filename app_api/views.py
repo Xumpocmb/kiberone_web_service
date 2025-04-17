@@ -740,3 +740,54 @@ def get_manager_by_room_id(request, room_id: int):
             {"success": False, "message": f"Ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@api_view(["POST"])
+def get_user_balances(request) -> Response:
+    """
+    Получение баланса для всех клиентов пользователя.
+    """
+    try:
+        telegram_id = request.data.get("telegram_id")
+        if not telegram_id:
+            return Response(
+                {"success": False, "message": "telegram_id обязателен"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Находим пользователя
+        user = AppUser.objects.filter(telegram_id=telegram_id).first()
+        if not user:
+            return Response(
+                {"success": False, "message": "Пользователь не найден"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Получаем клиентов пользователя
+        clients = Client.objects.filter(user=user)
+        if not clients.exists():
+            return Response(
+                {"success": False, "message": "У пользователя нет клиентов"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Формируем данные о балансе для каждого клиента
+        balances = [
+            {
+                "client_id": client.id,
+                "client_name": client.name,
+                "balance": float(client.balance) if client.balance else 0.0,
+            }
+            for client in clients
+        ]
+
+        return Response(
+            {"success": True, "data": balances},
+            status=status.HTTP_200_OK,
+        )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
