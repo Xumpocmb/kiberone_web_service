@@ -1,105 +1,200 @@
-@font-face {
-    font-family: 'pf_beausans_prolight';
-    src: url("../fonts/PFBeauSansPro-Light.ttf") format("truetype");
-    font-weight: normal;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: 'franklin_gothic_mediumregular';
-    src: url("../fonts/Franklin_Gothic_Medium.ttf") format("truetype");
-    font-weight: normal;
-    font-style: normal;
-
-}
-
 html {
     width: 100%;
-    height: 200vh;
-    font-family: 'pf_beausans_prolight';
-    font-size: 5vw;
+    height: 100%;
+    font-size: 16px;
     overflow-x: hidden;
-    /* background-color: #ffff; */
+    background-color: #fff;
+    font-family: 'PF Beau Sans Pro', sans-serif;
 }
-
 
 body {
-    font-family: 'pf_beausans_prolight';
-    background: #fff;
+    margin: 0;
+    padding: 0;
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
-    width: fit-content;
-    padding: 5vw;
-    /* overflow: hidden; */
+    align-items: center;
+    min-height: 100vh;
+    background: #fff;
+    color: #333;
 }
 
-span {
-    background-color: #fff;
-    padding: 3vw;
-    border-radius: 2vw;
+#mainDiv {
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background: #fff;
+}
+
+#infoWithImage {
     display: flex;
-    width: 81vw;
-    max-height: 50vw;
-    font-size: 4vw;
-    overflow: auto;
-    scroll-snap-type: y mandatory;
-    border: 0.5vw solid #F6C90E; 
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
 }
-
-p {
-    font-size: 4vw;
-    font-family: 'franklin_gothic_mediumregular';
-}
-
-a {
-    background-color: #F6C90E;
-    color: #ffffff;
-    border-radius: 5vw;
-    padding: 3vw;
-    padding-left: 6vw;
-    padding-right: 6vw;
-    text-decoration: none;
-    font-size: 5vw;
-    border: none;
-}
-
-textarea {
-    width: 80vw;
-    height: 20vw;
-}
-
 
 #profileImg {
-    width: 45vw;
-    height: 45vw;
-    margin-left: 5vw;
-    margin-bottom: -5vw;
-}
-
-#walletImg {
-    width: 5vw;
-    height: 5vw;
-    margin-right: 3vw;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 20px;
 }
 
 #userInfo {
     display: flex;
     flex-direction: column;
-    /* margin-left: 20px; */
-    color: #000000;
-    text-align: right;
+    align-items: flex-start;
+    text-align: left;
 }
 
-#infoWithImage {
+#account {
     display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+#walletImg {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+}
+
+#kiberons {
+    font-size: 18px;
+    font-weight: bold;
+    color: #F6C90E;
+}
+
+#fullname {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+#dob, #location {
+    font-size: 14px;
+    color: #666;
+}
+
+#shopLink {
+    display: inline-block;
+    background-color: #F6C90E;
+    color: #fff;
+    font-size: 16px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+#shopLink:hover {
+    background-color: #e5b70c;
+}
+
+/* Предупреждение */
+#warning {
+    white-space: nowrap;
+    overflow: hidden;
     width: 100%;
-    align-items: end;
-    margin-bottom: 5vw;
-    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.warningText {
+    display: inline-block;
+    padding-left: 100%;
+    animation: scroll-left 10s linear infinite;
+}
+
+@keyframes scroll-left {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
 }
 
 #extraInfo {
-    padding-top: 3vw;
+    margin-top: 20px;
+    text-align: left;
+}
+
+#extraInfo p {
+    font-size: 16px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+#subject, #resume {
+    font-size: 14px;
+    color: #555;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+#feedback {
+    margin-top: 20px;
+}
+
+#message {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 10px;
+    display: block;
+    text-align: center;
+}
+
+#feedbackForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #F6C90E;
+    border-radius: 5px;
+    resize: none;
+    margin-bottom: 10px;
+}
+
+button {
+    background-color: #F6C90E;
+    color: #fff;
+    font-size: 16px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #e5b70c;
+}
+
+@media (max-width: 600px) {
+    #infoWithImage {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    #profileImg {
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+
+    #shopLink {
+        width: 100%;
+    }
 }

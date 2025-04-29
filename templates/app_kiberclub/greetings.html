@@ -16,7 +16,7 @@
     <section id="main">
         <h1>Добро пожаловать <br> в KIBERhub!</h1>
         <img src="{% static 'img/start.png' %}" id="startImg" alt="Старт">
-        <form action="#" method="post" id="profileForm">
+        <form action="{% url 'app_kiberclub:open_profile' %}" method="post" id="profileForm">
             {% csrf_token %}
             {% if profiles %}
                 <label for="profiles">В KIBERone учится...</label>

@@ -641,10 +641,8 @@ def get_user_lessons_view(request) -> Response:
     try:
         user_crm_id = request.data.get("user_crm_id")
         branch_id = request.data.get("branch_id")
-        lesson_status = request.data.get(
-            "lesson_status", 1
-        )  # По умолчанию запланированные
-        lesson_type = request.data.get("lesson_type", 2)  # По умолчанию групповые
+        lesson_status = request.data.get("lesson_status", 1)
+        lesson_type = request.data.get("lesson_type", 2)  # групповые
 
         if not user_crm_id or not branch_id:
             return Response(
