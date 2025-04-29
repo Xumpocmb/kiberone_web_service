@@ -7,7 +7,6 @@ on:
 
 jobs:
   deploy:
-    name: Deploy via SSH
     runs-on: ubuntu-latest
 
     steps:
@@ -19,9 +18,9 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan 80.249.146.181 >> ~/.ssh/known_hosts
+          ssh-keyscan -H 80.249.146.181 >> ~/.ssh/known_hosts
 
-      - name: Deploy
+      - name: Deploy to server
         run: |
           ssh xumpocmb@80.249.146.181 << 'EOF'
             cd /home/xumpocmb/kiberone_web_service
@@ -30,5 +29,5 @@ jobs:
             pip install -r requirements.txt
             python manage.py migrate
             python manage.py collectstatic --noinput
-            sudo systemctl restart kiberone
+            sudo systemctl restart your_service_name
           EOF
