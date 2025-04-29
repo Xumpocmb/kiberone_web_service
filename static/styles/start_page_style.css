@@ -23,7 +23,7 @@ body {
     padding: 20px;
 }
 
-/* Заголовок */
+
 h1 {
     font-size: 28px;
     font-weight: bold;
@@ -31,7 +31,7 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Форма */
+
 form {
     background: #fff;
     display: flex;
@@ -75,7 +75,7 @@ button:hover {
     background-color: #e5b70c;
 }
 
-/* Текст */
+
 #text {
     font-size: 14px;
     color: #666;
@@ -83,7 +83,7 @@ button:hover {
     line-height: 1.6;
 }
 
-/* Ссылка "Давайте начнем" */
+
 #start-link {
     display: inline-block;
     margin-top: 20px;
@@ -97,11 +97,12 @@ button:hover {
     color: #e5b70c;
 }
 
-/* Изображение */
+
 #startImg {
+    width: 160px;
+    height: 210px;
     margin-top: 20px;
     max-width: 100%;
-    height: auto;
 }
 
 /* Сообщение о том, что профили не найдены */
