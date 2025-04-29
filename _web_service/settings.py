@@ -12,7 +12,15 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = os.getenv('DEBUG') == 'True'
 
-ALLOWED_HOSTS = ["*"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://mybot.80.249.146.181.nip.io"
+]
+
+ALLOWED_HOSTS = [
+    "*",
+    "mybot.80.249.146.181.nip.io",
+    "80.249.146.181"  # если ты подключаешься по IP тоже
+]
 
 
 INSTALLED_APPS = [
