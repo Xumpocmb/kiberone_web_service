@@ -17,7 +17,7 @@ from app_api.views import (
     get_erip_payment_help,
     get_partner_categories_view,
     get_partners_by_category_view,
-    get_partner_by_id_view, get_manager_by_room_id, get_user_balances, get_payment_data_from_api,
+    get_partner_by_id_view, get_manager_by_room_id, get_user_balances, get_client_payment_data
 )
 
 app_name = "app_crm_api"

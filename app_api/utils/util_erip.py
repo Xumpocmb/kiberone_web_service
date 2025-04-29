@@ -24,7 +24,7 @@ async def set_pay(user_data):
     amount_payable = await get_paid_summ(user_data, float(user_data.get("balance")), datetime.now().date())
 
     pay_url = (await get_pay_url(user_data.get("id"), round(amount_payable + 0.001, 2), user_data.get("name")))
-    return (f"ФИО: {user_data.get("name").title()}\n"
+    return (f"ФИО: {user_data.get('name').title()}\n"
             f"Сумма к оплате: {round(amount_payable + 0.001, 2)}\n"
             f"Ссылка для оплаты: {pay_url}")
 
