@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{% static 'styles/start_page_style_iphone.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/start_page_style.css' %}">
+    <link rel="stylesheet" href="{% static 'styles/spinner_style.css' %}">
+</head>
+
+<body>
+<center>
+    <div id="loader"></div>
+</center>
+<div id="mainDiv">
+    <section id="main">
+        <p>Добро пожаловать <br> в KIBERhub! {{ tg_id }}</p>
+        <a href="#" id="start-link">Давайте начнем</a>
+        <img src="{% static 'img/start.png' %}" id="startImg" alt="Старт">
+        <p id="text">KIBERhub - это личный кабинет Вашего ребенка, в котором вы сможете посмотреть количество
+            заработанных киберонов, перейти в кабинет по предзаказу товаров к предстающему КиберШопу, узнать тему
+            занятий и получить обратную связь от тьютора
+        </p>
+    </section>
+</div>
+
+</body>
+</html>
