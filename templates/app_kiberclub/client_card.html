@@ -19,15 +19,20 @@
             <section id="userInfo">
                 <section id="account">
                     <img src="{% static 'img/wallet_img.png' %}" alt="Кошелек" id="walletImg">
-                    <b id="kiberons">{{ user_kiberons }} К</b>
+                    <b id="kiberons">{{ client.kiberons_count }} К</b>
                 </section>
-                <p id="fullname">{{ user_crm_name }}</p>
-                <b id="dob">{{ user_crm_birthday }}</b>
+                <p id="fullname">{{ client.name }}</p>
+                <b id="dob">{{ client.dob }}</b>
                 <b id="location">{{ client.location_name }}</b>
             </section>
         </section>
+        
+        <section id="buttons">
+            <a href="#" id="shopLink">KIBERshop</a>
+            <a href="#" id="shopLink">Портфолио</a>
+        </section>
 
-        <a href="#" id="shopLink">Перейти в KIBERshop</a>
+        
 
         <div id="warning">
             <p class="warningText">
@@ -37,17 +42,21 @@
 
         <section id="extraInfo">
             <p>Тема следующего занятия:</p>
-            <span id="subject">{{ lesson_name }}</span>
+            <span id="subject">{{ client.lesson_name }}</span>
             <p>Обратная связь от тьютора:</p>
             <span id="resume">
-                <div class="item" id="resumeInfo">{{ user_resume }}</div>
+                <div class="item" id="resumeInfo">{{ client.resume }}</div>
             </span>
         </section>
 
         <section id="feedback">
             <p id="message">Оставьте обратную связь по работе нашей КИБЕР-школы!</p>
-            <form id="feedbackForm" onsubmit="event.preventDefault(); submitReview();">
+            <form method="post" id="feedbackForm" onsubmit="event.preventDefault(); submitReview()">
                 {% csrf_token %}
+                <input type="hidden" name="crm_id" value="{{ client.crm_id }}">
+                <input type="hidden" name="room_id" value="{{ client.room_id }}">
+                <input type="hidden" name="profile_id" value="{{ client.profile_id }}">
+                
                 <textarea placeholder="Введите ваш отзыв" id="feedbackInput" name="feedbackInput"></textarea>
                 <button type="submit" id="sendButton">Отправить</button>
             </form>
@@ -57,7 +66,31 @@
 </body>
 <script>
     function submitReview() {
-        alert("123")
+        let formData = new FormData(document.getElementById('feedbackForm'));
+        let button = document.getElementById('sendButton');
+
+        console.log('Button before change:', button.innerText);
+        button.innerText = 'Отправка...';
+        console.log('Button after change:', button.innerText);
+
+        fetch('{% url 'app_kiberclub:save_review_from_page' %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('message').innerText = data.message;
+                    button.innerText = 'Отправить';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                button.innerText = 'Отправить';
+            });
     }
 </script>
 </html>

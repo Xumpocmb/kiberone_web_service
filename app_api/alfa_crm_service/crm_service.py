@@ -306,20 +306,20 @@ def get_client_lessons(user_crm_id: int, branch_id: int, page: int | None = None
         return {"total": 0}
 
 
-async def get_curr_tariff(user_crm_id, branch_id, curr_date):
+def get_curr_tariff(user_crm_id, branch_id, curr_date):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer-tariff/index?customer_id={user_crm_id}"
     customer_tariffs = send_request_to_crm(url, "{}", None)
     for tariff in sorted(customer_tariffs.get("items"), key=lambda x: datetime.strptime(x.get("e_date"), '%d.%m.%Y')):
         tariff_end_date = datetime.strptime(tariff.get("e_date"), '%d.%m.%Y')
         tariff_begin_date = datetime.strptime(tariff.get("b_date"), '%d.%m.%Y')
         if tariff_end_date.date() >= curr_date >= tariff_begin_date.date():
-            price = float(await get_tariff_price(branch_id, tariff.get("tariff_id")))
-            discount = float(await get_curr_discount(branch_id, user_crm_id, curr_date))
+            price = float(get_tariff_price(branch_id, tariff.get("tariff_id")))
+            discount = float(get_curr_discount(branch_id, user_crm_id, curr_date))
             tariff.update({"price": price * (1 - discount/100)})
             return tariff
 
 
-async def get_tariff_price(branch_id, tariff_id):
+def get_tariff_price(branch_id, tariff_id):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/tariff/index"
     page = 0
     data = {"page": 0}
@@ -341,7 +341,7 @@ async def get_tariff_price(branch_id, tariff_id):
     return []
 
 
-async def get_curr_discount(branch_id, user_crm_id, curr_date):
+def get_curr_discount(branch_id, user_crm_id, curr_date):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/discount/index"
     page = 0
     data = {"customer_id": user_crm_id, "page": 0}
@@ -363,3 +363,16 @@ async def get_curr_discount(branch_id, user_crm_id, curr_date):
         discounts = send_request_to_crm(url, data_json, None)
         discounts_items = discounts.get("items")
     return 0
+
+
+def get_client_lesson_name(branch_id: int, subject_id: int | None = None) -> dict | None:
+    data = {
+        "id": subject_id,
+        "active": True,
+        "page": 0
+    }
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/subject/index"
+    response_data = send_request_to_crm(url, data, params=None,)
+    if response_data and response_data.get("total") != 0:
+        return response_data
+    return {"total": 0}
