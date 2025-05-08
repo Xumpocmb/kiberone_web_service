@@ -41,7 +41,7 @@ def index(request: HttpRequest) -> HttpResponse:
     except Exception as e:
         return redirect("app_kiberclub:error_page")
 
-    return render(request, 'app_kiberclub/greetings.html', context=context)
+    return render(request, 'app_kiberclub/index.html', context=context)
 
 
 
@@ -50,20 +50,21 @@ def open_profile(request):
         Отображает профиль выбранного клиента.
         """
     if request.method == "POST":
-        profile_id = request.POST.get("profile_id")
-        if profile_id:
-            request.session['profile_id'] = profile_id
+        client_id = request.POST.get("client_id")
+        if client_id:
+            request.session['client_id'] = client_id
         else:
+            print("not client id")
             return redirect('app_kiberclub:error_page')
     else:
-        profile_id = request.session.get('profile_id')
+        client_id = request.session.get('client_id')
 
     try:
-        client = get_object_or_404(Client, crm_id=profile_id)
+        client = get_object_or_404(Client, crm_id=client_id)
         context = {
             "title": "KIBERone - Профиль",
             "client": {
-                "profile_id": profile_id,
+                "client_id": client_id,
                 "crm_id": client.crm_id,
                 "name": client.name,
                 "dob": client.dob.strftime("%d.%m.%Y") if client.dob else "Не указано",
@@ -81,7 +82,7 @@ def open_profile(request):
 
         branch_id = int(client.branch.branch_id)
 
-        lessons_data = get_client_lessons(profile_id, branch_id, lesson_status=1, lesson_type=2)
+        lessons_data = get_client_lessons(client_id, branch_id, lesson_status=1, lesson_type=2)
         if lessons_data and lessons_data.get("total", 0) > 0:
             lesson = lessons_data.get("items", [])[-1]
             room_id = lesson.get("room_id")

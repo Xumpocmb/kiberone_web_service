@@ -19,7 +19,7 @@ CSRF_TRUSTED_ORIGINS = [
 ALLOWED_HOSTS = [
     "*",
     "mybot.80.249.146.181.nip.io",
-    "80.249.146.181"  # если ты подключаешься по IP тоже
+    "80.249.146.181",
 ]
 
 
@@ -64,6 +64,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
+                'app_kibershop.context_processors.cart'
             ],
         },
     },
@@ -72,9 +74,6 @@ TEMPLATES = [
 WSGI_APPLICATION = '_web_service.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -82,9 +81,6 @@ DATABASES = {
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -102,11 +98,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'ru-RU'
 TIME_ZONE = 'Europe/Moscow'

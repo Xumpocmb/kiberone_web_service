@@ -20,7 +20,7 @@
             {% csrf_token %}
             {% if profiles %}
                 <label for="profiles">В KIBERone учится...</label>
-                <select id="profiles" name="profile_id">
+                <select id="profiles" name="client_id">
                     {% for client in profiles %}
                         <option value="{{ client.crm_id }}">{{ client.name }}</option>
                     {% endfor %}

@@ -40,6 +40,7 @@ class CartQuerySet(models.QuerySet):
     def total_sum(self):
         return sum(item.cart_item_price() for item in self)
 
+
 class Cart(models.Model):
     user = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='cart', verbose_name='Пользователь')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Товар')
@@ -73,6 +74,7 @@ class Order(models.Model):
     def __str__(self):
         return f'Заказ: {self.id} | Телефон: {self.user.phone_number}'
 
+
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items', verbose_name='Заказ')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, verbose_name='Товар')
@@ -93,3 +95,5 @@ class ClientKiberons(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='kiberons', verbose_name="Клиент")
     start_kiberons_count = models.CharField(default=0, max_length=5, blank=True, verbose_name="Количество киберонов")
     remain_kiberons_count = models.CharField(default=0, max_length=5, blank=True, verbose_name="Количество киберонов после заказа")
+
+
