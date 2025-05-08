@@ -1,18 +1,14 @@
 import json
 
+import gspread
 import requests
 from bs4 import BeautifulSoup
 from django.http import JsonResponse, HttpRequest, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from rest_framework.reverse import reverse
-
-from app_api.alfa_crm_service.crm_service import get_client_lessons, get_client_lesson_name, branches
-from app_api.views import get_user_lessons_view
-from app_kiberclub.models import AppUser, Client, Location
-
-import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+from app_api.alfa_crm_service.crm_service import get_client_lessons, get_client_lesson_name
+from app_kiberclub.models import AppUser, Client, Location
 from app_kibershop.models import ClientKiberons
 
 CREDENTIALS_FILE = 'kiberone-tg-bot-a43691efe721.json'

@@ -22,7 +22,6 @@
         {% for cart in carts %}
             <div class="orderProductCard">
                 <img src="{{ cart.product.image.url }}" class="orderProductImg" alt="item_image">
-                <!-- <b><p class="cartProductName">Ноутбук</p></b> -->
                 <section class="buttonsRowSection">
                     <a href="{% url 'app_kibershop:cart_minus' cart.id %}" class="signButton">-</a>
                     <p class="productCount">{{ cart.quantity }}</p>
@@ -30,7 +29,6 @@
                 </section>
                 <section class="orderSection">
                     <p class="orderProductPrice"><b>{{ cart.cart_item_price }}К</b></p>
-                    <!--  <button class="orderButton">Предзаказ</button>  -->
                 </section>
                 <section class="removeButtonSection">
                     <a href="{% url 'app_kibershop:remove_from_cart' cart.id %}"><img src="{% static 'img/kibershop/remove.svg' %}" class="removeButton"></a>
@@ -38,7 +36,7 @@
             </div>
         {% endfor %}
     </section>
-
+    {% if carts %}
     <section id="fullOrderInfoSection">
         <div id="fullOrderInfo">
             <p id="orderProductsCount">Товары: <b>{{ carts.total_quantity }}</b> шт.</p>
@@ -46,18 +44,19 @@
         </div>
         <form id="orderForm" action="{% url 'app_kibershop:make_order' %}" method="post">
             {% csrf_token %}
-            <button type="submit" id="fullOrderButton" disabled><img src="{% static 'img/kibershop/money.svg' %}" id="fullOrderButtonImg">Предзаказ</button>
+            <button type="submit" id="fullOrderButton"><img src="{% static 'img/kibershop/money.svg' %}" id="fullOrderButtonImg">Предзаказ</button>
         </form>
 
     </section>
+        {% else %}
+        <section id="fullOrderInfoSection">
+        <div id="fullOrderInfo">
+            <p id="orderProductsCount">Корзина пуста</p>
+        </div>
+
+    </section>
+    {% endif %}
     </body>
-    <script>
-        //document.getElementById('fullOrderButton').addEventListener('click', function (event) {
-        //    event.preventDefault();
-        //    this.innerHTML = 'Обработка…';
-        //    document.getElementById('orderForm').submit();
-        //});
-    </script>
 {% endblock %}
 
 {% block footer %}

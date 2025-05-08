@@ -11,6 +11,7 @@
 
 {% block content %}
     <body>
+    {% include 'app_kibershop/notifications.html' %}
     <section id="fixedCartSection">
         <p id="productInCartCount">{% if carts.total_quantity %}{{ carts.total_quantity }}{% else %}0{% endif %}</p>
         <a href="{% url 'app_kibershop:cart' %}" id="fixedCartButton">
