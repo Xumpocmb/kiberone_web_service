@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     # user apps
     'app_api',
     'app_kiberclub',
+    "app_kibershop.apps.AppKibershopConfig"
 ]
 
 MIDDLEWARE = [

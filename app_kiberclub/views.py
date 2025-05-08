@@ -2,7 +2,7 @@ import json
 
 import requests
 from bs4 import BeautifulSoup
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework.reverse import reverse
 
@@ -18,15 +18,29 @@ from oauth2client.service_account import ServiceAccountCredentials
 CREDENTIALS_FILE = 'kiberone-tg-bot-a43691efe721.json'
 
 
-def index(request):
+def index(request: HttpRequest) -> HttpResponse:
     context = {
         "title": "KIBERone",
     }
-    telegram_id_from_req: str = request.GET.get('user_tg_id')
 
-    bot_user = AppUser.objects.get(telegram_id=telegram_id_from_req)
-    user_clients = Client.objects.filter(user=bot_user)
-    context.update({"profiles": user_clients})
+    try:
+        telegram_id_from_req = request.GET.get("user_tg_id")
+        if telegram_id_from_req:
+            request.session["tg_id"] = telegram_id_from_req
+        else:
+            telegram_id_from_req = request.session.get("tg_id")
+            if not telegram_id_from_req:
+                return redirect("app_kiberclub:error_page")
+
+        bot_user = get_object_or_404(AppUser, telegram_id=telegram_id_from_req)
+        user_clients = Client.objects.filter(user=bot_user)
+        context.update({"profiles": user_clients})
+
+    except AppUser.DoesNotExist:
+        return redirect("app_kiberclub:error_page")
+    except Exception as e:
+        return redirect("app_kiberclub:error_page")
+
     return render(request, 'app_kiberclub/greetings.html', context=context)
 
 
@@ -37,111 +51,116 @@ def open_profile(request):
         """
     if request.method == "POST":
         profile_id = request.POST.get("profile_id")
-        if not profile_id:
-            return redirect('app_kiberclub:error_page')
-
-        try:
-            client = get_object_or_404(Client, crm_id=profile_id)
-            context = {
-                "title": "KIBERone - Профиль",
-                "client": {
-                    "profile_id": profile_id,
-                    "crm_id": client.crm_id,
-                    "name": client.name,
-                    "dob": client.dob.strftime("%d.%m.%Y") if client.dob else "Не указано",
-                    "balance": client.balance,
-                    "paid_count": client.paid_lesson_count,
-                    "next_lesson_date": client.next_lesson_date.strftime(
-                        "%d.%m.%Y") if client.next_lesson_date else "Нет запланированных уроков",
-                    "paid_till": client.paid_till.strftime("%d.%m.%Y") if client.paid_till else "Не указано",
-                    "note": client.note or "Нет заметок",
-                    "branch": client.branch.name if client.branch else "Не указано",
-                    "is_study": "Да" if client.is_study else "Нет",
-                    "has_scheduled_lessons": "Да" if client.has_scheduled_lessons else "Нет"
-                }
-            }
-
-            branch_id = int(client.branch.branch_id)
-
-            lessons_data = get_client_lessons(profile_id, branch_id, lesson_status=1, lesson_type=2)
-            if lessons_data and lessons_data.get("total", 0) > 0:
-                lesson = lessons_data.get("items", [])[-1]
-                room_id = lesson.get("room_id")
-                subject_id = lesson.get("subject_id")
-
-
-                lesson_info = get_client_lesson_name(branch_id, subject_id)
-                if lesson_info.get("total") > 0:
-                    all_lesson_items: list = lesson_info.get("items")
-                    lesson_name = ""
-                    for item in all_lesson_items:
-                        if item.get("id") == subject_id:
-                            lesson_name = item.get("name", "")
-
-                if room_id:
-                    location = Location.objects.filter(location_crm_id=room_id).first()
-                    location_sheet_name = location.sheet_name
-
-
-                    client_resume = get_resume_from_google_sheet(client.branch.sheet_url, location_sheet_name, client.crm_id)
-                    context["client"].update({
-                        "location_name": location.name,
-                        "lesson_name": lesson_name if lesson_name else "",
-                        "resume": client_resume,
-                        "room_id": room_id,
-                    })
-
-                    # ----------------------------------------------------------------
-
-                    with open("kiberclub_credentials.json", "r", encoding="utf-8") as f:
-                        data = json.load(f)
-
-                        baranovichi_login: str = data["Барановичи"]["логин"]
-                        baranovichi_password: str = data["Барановичи"]["пароль"]
-
-                        minsk_login: str = data["Минск"]["логин"]
-                        minsk_password: str = data["Минск"]["пароль"]
-
-                        borisov_login: str = data["Борисов"]["логин"]
-                        borisov_password: str = data["Борисов"]["пароль"]
-
-                        novopolock_login: str = data["Новополоцк"]["логин"]
-                        novopolock_password: str = data["Новополоцк"]["пароль"]
-
-                    user_crm_name_splitted: list = client.name.split(" ", )[:2]
-                    user_crm_name_full: str = " ".join(user_crm_name_splitted).strip()
-
-                    if branch_id == 1:
-                        login = minsk_login
-                        password = minsk_password
-                        kiberons: str | None = get_kiberons_count(client.crm_id, user_crm_name_full, login, password)
-                    elif branch_id == 3:
-                        login = borisov_login
-                        password = borisov_password
-                        kiberons: str | None = get_kiberons_count(client.crm_id, user_crm_name_full, login, password)
-                    elif branch_id == 2:
-                        login = baranovichi_login
-                        password = baranovichi_password
-                        kiberons: str | None = get_kiberons_count(client.crm_id, user_crm_name_full, login, password)
-                    elif branch_id == 4:
-                        login = novopolock_login
-                        password = novopolock_password
-                        kiberons: str | None = get_kiberons_count(client.crm_id, user_crm_name_full, login, password)
-
-                    context["client"].update({
-                        "kiberons_count": kiberons if kiberons else "0",
-                    })
-
-
-
-                else:
-                    return redirect("app_kiberclub:error_page")
-                return render(request, "app_kiberclub/client_card.html", context)
-        except Exception as e:
-            print(e)
+        if profile_id:
+            request.session['profile_id'] = profile_id
+        else:
             return redirect('app_kiberclub:error_page')
     else:
+        profile_id = request.session.get('profile_id')
+
+    try:
+        client = get_object_or_404(Client, crm_id=profile_id)
+        context = {
+            "title": "KIBERone - Профиль",
+            "client": {
+                "profile_id": profile_id,
+                "crm_id": client.crm_id,
+                "name": client.name,
+                "dob": client.dob.strftime("%d.%m.%Y") if client.dob else "Не указано",
+                "balance": client.balance,
+                "paid_count": client.paid_lesson_count,
+                "next_lesson_date": client.next_lesson_date.strftime(
+                    "%d.%m.%Y") if client.next_lesson_date else "Нет запланированных уроков",
+                "paid_till": client.paid_till.strftime("%d.%m.%Y") if client.paid_till else "Не указано",
+                "note": client.note or "Нет заметок",
+                "branch": client.branch.name if client.branch else "Не указано",
+                "is_study": "Да" if client.is_study else "Нет",
+                "has_scheduled_lessons": "Да" if client.has_scheduled_lessons else "Нет"
+            }
+        }
+
+        branch_id = int(client.branch.branch_id)
+
+        lessons_data = get_client_lessons(profile_id, branch_id, lesson_status=1, lesson_type=2)
+        if lessons_data and lessons_data.get("total", 0) > 0:
+            lesson = lessons_data.get("items", [])[-1]
+            room_id = lesson.get("room_id")
+            subject_id = lesson.get("subject_id")
+
+
+            lesson_info = get_client_lesson_name(branch_id, subject_id)
+            if lesson_info.get("total") > 0:
+                all_lesson_items: list = lesson_info.get("items")
+                lesson_name = ""
+                for item in all_lesson_items:
+                    if item.get("id") == subject_id:
+                        lesson_name = item.get("name", "")
+
+            if room_id:
+
+                request.session["room_id"] = room_id
+
+                location = Location.objects.filter(location_crm_id=room_id).first()
+                location_sheet_name = location.sheet_name
+
+
+                client_resume = get_resume_from_google_sheet(client.branch.sheet_url, location_sheet_name, client.crm_id)
+                context["client"].update({
+                    "location_name": location.name,
+                    "lesson_name": lesson_name if lesson_name else "",
+                    "resume": client_resume,
+                    "room_id": room_id,
+                })
+
+                # ----------------------------------------------------------------
+
+                with open("kiberclub_credentials.json", "r", encoding="utf-8") as f:
+                    data = json.load(f)
+
+                    baranovichi_login: str = data["Барановичи"]["логин"]
+                    baranovichi_password: str = data["Барановичи"]["пароль"]
+
+                    minsk_login: str = data["Минск"]["логин"]
+                    minsk_password: str = data["Минск"]["пароль"]
+
+                    borisov_login: str = data["Борисов"]["логин"]
+                    borisov_password: str = data["Борисов"]["пароль"]
+
+                    novopolock_login: str = data["Новополоцк"]["логин"]
+                    novopolock_password: str = data["Новополоцк"]["пароль"]
+
+                user_crm_name_splitted: list = client.name.split(" ", )[:2]
+                user_crm_name_full: str = " ".join(user_crm_name_splitted).strip()
+
+                if branch_id == 1:
+                    login = minsk_login
+                    password = minsk_password
+                    kiberons: str | None = get_kiberons_count(client.crm_id, user_crm_name_full, login, password)
+                elif branch_id == 3:
+                    login = borisov_login
+                    password = borisov_password
+                    kiberons: str | None = get_kiberons_count(client.crm_id, user_crm_name_full, login, password)
+                elif branch_id == 2:
+                    login = baranovichi_login
+                    password = baranovichi_password
+                    kiberons: str | None = get_kiberons_count(client.crm_id, user_crm_name_full, login, password)
+                elif branch_id == 4:
+                    login = novopolock_login
+                    password = novopolock_password
+                    kiberons: str | None = get_kiberons_count(client.crm_id, user_crm_name_full, login, password)
+
+                context["client"].update({
+                    "kiberons_count": kiberons if kiberons else "0",
+                })
+            else:
+                return redirect("app_kiberclub:error_page")
+            return render(request, "app_kiberclub/client_card.html", context)
+        else:
+            return redirect("app_kiberclub:error_page")
+    except Exception as e:
+        print(e)
         return redirect('app_kiberclub:error_page')
+
 
 
 def error_page_view(request):
@@ -314,6 +333,8 @@ def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, passwor
         if name == ' '.join(user_crm_name_full.split(' ')[:2]):
             balance_element = child.find('div', class_='user_admin_col_balance')
             balance = balance_element.text.strip()
+
+            # TODO: добавить кибероны в таблицу
 
             # user = UserData.objects.filter(tg_id=tg_id).first()
             # if user:
