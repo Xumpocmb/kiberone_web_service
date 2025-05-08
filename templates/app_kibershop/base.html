@@ -17,11 +17,13 @@
                 <img src="{% static 'img/kibershop/logo.jpg' %}" id="logoImg">
             </a>
             <a href="{% url 'app_kibershop:catalog' %}" id="toCatalog">Каталог</a>
+            
         </div>
 
         <div class="right_section">
             <a href="{% url 'app_kibershop:cart' %}"><img src="{% static 'img/kibershop/cart_logo.svg' %}"
                                                           class="iconImg"></a>
+            <p style="color: white;">{{ kiberons }} K</p>
             <a href="{% url 'app_kibershop:profile_page' %}">
                 <img src="{% static 'img/kibershop/icon_profile.svg' %}" id="profileImg" class="iconImg">
             </a>

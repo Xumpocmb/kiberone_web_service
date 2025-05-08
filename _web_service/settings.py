@@ -65,7 +65,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
 
-                'app_kibershop.context_processors.cart'
+                'app_kibershop.context_processors.cart',
+                'app_kibershop.context_processors.get_user_kiberons',
             ],
         },
     },
