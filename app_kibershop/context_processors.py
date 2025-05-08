@@ -1,5 +1,5 @@
 from app_kiberclub.models import Client
-from app_kibershop.models import Cart, Order
+from app_kibershop.models import Cart, Order, ClientKiberons
 
 
 def cart(request):
@@ -10,18 +10,18 @@ def cart(request):
     return {'carts': carts if carts.exists() else []}
 
 
-# def kiberons(request):
-#     if request.session.get('user_tg_id'):
-#         user_tg_id = request.session.get('user_tg_id')
-#
-#         user_orders = Order.objects.filter(user=UserData.objects.get(tg_id=request.session.get('user_tg_id')))
-#         user_data = UserData.objects.get(tg_id=user_tg_id)
-#
-#         if user_orders.exists():
-#             if user_data:
-#                 return {'kiberons': user_data.kiberons_count_after_orders}
-#         else:
-#             return {'kiberons': user_data.kiberons_count}
-#     else:
-#         return {'kiberons': 0}
+def get_user_kiberons(request):
+    if request.session.get('client_id'):
+        client_id = request.session.get('client_id')
+        client = Client.objects.filter(crm_id=client_id).first()
+        user_orders = Order.objects.filter(user=Client.objects.get(crm_id=request.session.get('client_id')))
+        user_kiberons = ClientKiberons.objects.get(client=client)
+
+        if user_orders.exists():
+            if user_kiberons:
+                return {'kiberons': user_kiberons.remain_kiberons_count}
+        else:
+            return {'kiberons': user_kiberons.start_kiberons_count}
+    else:
+        return {'kiberons': 0}
 

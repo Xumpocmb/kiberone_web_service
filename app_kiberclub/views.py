@@ -13,7 +13,7 @@ from app_kiberclub.models import AppUser, Client, Location
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-
+from app_kibershop.models import ClientKiberons
 
 CREDENTIALS_FILE = 'kiberone-tg-bot-a43691efe721.json'
 
@@ -335,13 +335,15 @@ def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, passwor
             balance_element = child.find('div', class_='user_admin_col_balance')
             balance = balance_element.text.strip()
 
-            # TODO: добавить кибероны в таблицу
+            user = Client.objects.filter(crm_id=user_crm_id).first()
+            if not user:
+                return "0"
+            user_kiberons_in_db = ClientKiberons.objects.filter(client=user.id).first()
+            if user_kiberons_in_db:
+                user_kiberons_in_db.start_kiberons_count = balance
+                user_kiberons_in_db.save()
+            else:
+                ClientKiberons.objects.create(client=user, start_kiberons_count=balance)
 
-            # user = UserData.objects.filter(tg_id=tg_id).first()
-            # if user:
-            #     user.kiberons_count = int(balance)
-            #     user.save()
-            # else:
-            #     return 0
             return balance
     return None
