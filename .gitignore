@@ -137,3 +137,5 @@ info.txt
 *.json
 /celerybeat-schedule
 /static/rest_framework/
+/static/fonts/
+/static/fonts/*

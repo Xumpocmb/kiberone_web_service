@@ -1,232 +1,114 @@
-/* Общие стили */
+@font-face {
+    font-family: 'pf_beausans_prolight';
+    src: url('/static/fonts/PFBeauSansPro-Light.ttf');
+         url('/static/fonts/PFBeauSansPro-Light.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+@font-face {
+    font-family: 'franklin_gothic_mediumregular';
+    src: url('/static/fonts/Franklin_Gothic_Medium.ttf');
+         url('/static/fonts/Franklin_Gothic_Medium.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
 html {
     width: 100%;
-    height: 100%;
-    font-size: 16px;
+    height: 200vh;
+    font-family: 'pf_beausans_prolight';
+    font-size: 4vw;
     overflow-x: hidden;
-    background-color: #fff;
-    font-family: 'PF Beau Sans Pro', sans-serif;
+    /* background-color: #ffff; */
 }
+
 
 body {
-    margin: 0;
-    padding: 0;
+    font-family: 'pf_beausans_prolight';
+    background: #fff;
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background: #fff;
-    color: #333;
+    width: fit-content;
+    padding: 5vw;
+    /* overflow: hidden; */
 }
 
-#mainDiv {
-    text-align: center;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    background: #fff;
-    overflow: hidden;
-}
-
-#infoWithImage {
+span {
+    background-color: #fff;
+    padding: 3vw;
+    border-radius: 2vw;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
+    width: 81vw;
+    max-height: 50vw;
+    font-size: 4vw;
+    overflow: auto;
+    scroll-snap-type: y mandatory;
+    border: 0.5vw solid #F6C90E; 
 }
+
+p {
+    font-size: 4vw;
+    font-family: 'franklin_gothic_mediumregular';
+}
+
+a {
+    background-color: #F6C90E;
+    color: #ffffff;
+    border-radius: 5vw;
+    padding: 1.0vh;
+    width: 43vw;
+    text-decoration: none;
+    font-size: 3.5vw;
+    border: none;
+    text-align: center;
+}
+
+textarea {
+    width: 80vw;
+    height: 20vw;
+}
+
 
 #profileImg {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    margin-right: 20px;
+    width: 45vw;
+    height: 45vw;
+    margin-left: 5vw;
+    margin-bottom: -5vw;
+}
+
+#walletImg {
+    width: 5vw;
+    height: 5vw;
+    margin-right: 3vw;
 }
 
 #userInfo {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
-    flex: 1;
+    /* margin-left: 20px; */
+    color: #000000;
+    text-align: right;
 }
 
-#account {
+#infoWithImage {
     display: flex;
-    align-items: center;
-    margin-bottom: 10px;
+    width: 100%;
+    align-items: end;
+    margin-bottom: 5vw;
+    justify-content: space-between;
 }
 
-#walletImg {
-    width: 20px;
-    height: 20px;
-    margin-right: 5px;
-}
-
-#kiberons {
-    font-size: 18px;
-    font-weight: bold;
-    color: #F6C90E;
-}
-
-#fullname {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-#dob, #location {
-    font-size: 14px;
-    color: #666;
+#extraInfo {
+    padding-top: 3vw;
 }
 
 #buttons {
     display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-#shopLink {
-    display: inline-block;
-    background-color: #F6C90E;
-    color: #fff;
-    font-size: 16px;
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: background-color 0.3s ease;
-    flex: 1;
-    min-width: 150px;
-    text-align: center;
-}
-
-#shopLink:hover {
-    background-color: #e5b70c;
-}
-
-#warning {
-    white-space: nowrap;
-    overflow: hidden;
-    width: 100%;
-    box-sizing: border-box;
-    margin-top: 20px;
-}
-
-.warningText {
-    display: inline-block;
-    padding-left: 100%;
-    animation: scroll-left 10s linear infinite;
-    font-size: 14px;
-}
-
-@keyframes scroll-left {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-100%);
-    }
-}
-
-#extraInfo {
-    margin-top: 20px;
-    text-align: left;
-}
-
-#extraInfo p {
-    font-size: 16px;
-    margin-bottom: 5px;
-    color: #333;
-}
-
-#subject, #resume {
-    font-size: 14px;
-    color: #555;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    display: block;
-    word-wrap: break-word;
-}
-
-/* Форма обратной связи */
-#feedback {
-    margin-top: 20px;
-}
-
-#message {
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 10px;
-    display: block;
-    text-align: center;
-}
-
-#feedbackForm {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-textarea {
-    width: 100%;
-    height: 100px;
-    padding: 10px;
-    font-size: 16px;
-    border: 2px solid #F6C90E;
-    border-radius: 5px;
-    resize: none;
-    margin-bottom: 10px;
-}
-
-button {
-    background-color: #F6C90E;
-    color: #fff;
-    font-size: 16px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    min-width: 150px;
-}
-
-button:hover {
-    background-color: #e5b70c;
-}
-
-@media (max-width: 600px) {
-    #infoWithImage {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    #profileImg {
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-
-    #shopLink {
-        width: 100%;
-        padding: 10px;
-        font-size: 14px;
-    }
-
-    #warning {
-        font-size: 12px;
-    }
-
-    #feedbackForm textarea {
-        font-size: 14px;
-    }
-
-    button {
-        font-size: 14px;
-    }
+    flex-direction: row;
+    justify-content: space-between;
 }
