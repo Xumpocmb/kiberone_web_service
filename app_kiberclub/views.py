@@ -339,8 +339,9 @@ def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, passwor
 
             user = Client.objects.filter(crm_id=user_crm_id).first()
             if not user:
+                print("user not found")
                 return "0"
-            user_kiberons_in_db = ClientKiberons.objects.filter(client=user.id).first()
+            user_kiberons_in_db = ClientKiberons.objects.filter(client=user).first()
             if user_kiberons_in_db:
                 user_kiberons_in_db.start_kiberons_count = balance
                 user_kiberons_in_db.save()

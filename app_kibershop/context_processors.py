@@ -15,7 +15,10 @@ def get_user_kiberons(request):
         client_id = request.session.get('client_id')
         client = Client.objects.filter(crm_id=client_id).first()
         user_orders = Order.objects.filter(user=Client.objects.get(crm_id=request.session.get('client_id')))
-        user_kiberons = ClientKiberons.objects.get(client=client)
+        try:
+            user_kiberons = ClientKiberons.objects.get(client=client)
+        except ClientKiberons.DoesNotExist:
+            return {'kiberons': "0"}
 
         if user_orders.exists():
             if user_kiberons:
