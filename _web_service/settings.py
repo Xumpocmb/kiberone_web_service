@@ -13,12 +13,12 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 DEBUG = os.getenv('DEBUG') == 'True'
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://mybot.80.249.146.181.nip.io"
+    "https://web.80-249-146-181.nip.io"
 ]
 
 ALLOWED_HOSTS = [
     "*",
-    "mybot.80.249.146.181.nip.io",
+    "web.80-249-146-181.nip.io",
     "80.249.146.181",
 ]
 
