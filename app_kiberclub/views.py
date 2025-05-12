@@ -362,7 +362,8 @@ def get_portfolio_link(client_name) -> str | None:
     # TODO: заменить на параметр функции
     name = "Пастухов Евгений Витальевич"
 
-    query = f"name='{name}' and mimeType='application/vnd.google-apps.folder'"
+
+    query = f"name contains '{name}' and mimeType='application/vnd.google-apps.folder'"
     results = drive_service.files().list(
         q=query,
         fields="nextPageToken, files(id, name, mimeType)"
