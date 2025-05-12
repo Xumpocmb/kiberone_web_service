@@ -18,7 +18,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 ALLOWED_HOSTS = [
     "*",
-    "https://web.80-249-146-181.nip.io",
+    'web.80-249-146-181.nip.io',
     "80.249.146.181",
 ]
 
