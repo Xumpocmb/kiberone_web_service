@@ -2,10 +2,12 @@ import gspread
 from django.contrib import messages
 from django.db.models import Sum, F
 from django.shortcuts import render, redirect, get_object_or_404
+
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread.utils import rowcol_to_a1
 from app_kiberclub.models import Client, Location
 from app_kibershop.models import Category, Product, Cart, Order, OrderItem, ClientKiberons
+
 
 
 
@@ -204,3 +206,5 @@ def profile_page(request):
         'total_quantity': total_quantity,
     }
     return render(request, 'app_kibershop/profile_page.html', context=context)
+
+

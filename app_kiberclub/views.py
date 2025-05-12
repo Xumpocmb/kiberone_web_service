@@ -11,6 +11,9 @@ from app_api.alfa_crm_service.crm_service import get_client_lessons, get_client_
 from app_kiberclub.models import AppUser, Client, Location
 from app_kibershop.models import ClientKiberons
 
+from googleapiclient.discovery import build
+from google.oauth2 import service_account
+
 CREDENTIALS_FILE = 'kiberone-tg-bot-a43691efe721.json'
 
 
@@ -75,6 +78,9 @@ def open_profile(request):
                 "has_scheduled_lessons": "Да" if client.has_scheduled_lessons else "Нет"
             }
         }
+
+        portfolio_link = get_portfolio_link(client.name)
+        context.update({"portfolio_link": portfolio_link})
 
         branch_id = int(client.branch.branch_id)
 
@@ -343,3 +349,29 @@ def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, passwor
 
             return balance
     return None
+
+
+
+def get_portfolio_link(client_name) -> str | None:
+    SCOPES = ['https://www.googleapis.com/auth/drive ']
+    CREDENTIALS_FILE = 'portfolio-credentials.json'
+    credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
+
+    drive_service = build('drive', 'v3', credentials=credentials)
+
+    # TODO: заменить на параметр функции
+    name = "Пастухов Евгений Витальевич"
+
+    query = f"name='{name}' and mimeType='application/vnd.google-apps.folder'"
+    results = drive_service.files().list(
+        q=query,
+        fields="nextPageToken, files(id, name, mimeType)"
+    ).execute()
+
+    folders = results.get('files', [])
+    if not folders:
+        return "#"
+
+    folder_id = folders[0]['id']
+    folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
+    return folder_url
