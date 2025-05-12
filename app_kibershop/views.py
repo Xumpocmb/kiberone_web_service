@@ -96,6 +96,9 @@ def make_order(request):
         try:
             user_orders = Order.objects.filter(user=user_in_db)
             user_kiberons_db = ClientKiberons.objects.filter(client=user_in_db).first()
+            if not user_kiberons_db:
+                messages.error(request, "Нам не удалось получить количество ваших киберонов.", extra_tags="danger")
+                return redirect(request.META.get('HTTP_REFERER'))
             if user_orders.exists():
                 user_kiberons_count = int(user_kiberons_db.remain_kiberons_count)
             else:

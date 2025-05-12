@@ -1,3 +1,20 @@
+@font-face {
+    font-family: 'pf_beausans_prolight';
+    src: url('/static/fonts/PFBeauSansPro-Light.ttf');
+         url('/static/fonts/PFBeauSansPro-Light.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+@font-face {
+    font-family: 'franklin_gothic_mediumregular';
+    src: url('/static/fonts/Franklin_Gothic_Medium.ttf');
+         url('/static/fonts/Franklin_Gothic_Medium.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
 button {
     background-color: #F6C90E;
     color: #ffffff;
