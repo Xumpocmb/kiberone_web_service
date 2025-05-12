@@ -111,7 +111,7 @@ def open_profile(request):
                 context["client"].update({
                     "location_name": location.name,
                     "lesson_name": lesson_name if lesson_name else "",
-                    "resume": client_resume,
+                    "resume": client_resume if client_resume else "Появится позже",
                     "room_id": room_id,
                 })
 
@@ -360,11 +360,8 @@ def get_portfolio_link(client_name) -> str | None:
 
     drive_service = build('drive', 'v3', credentials=credentials)
 
-    # TODO: заменить на параметр функции
-    name = "Пастухов Евгений Витальевич"
 
-
-    query = f"name contains '{name}' and mimeType='application/vnd.google-apps.folder'"
+    query = f"name contains '{client_name}' and mimeType='application/vnd.google-apps.folder'"
     results = drive_service.files().list(
         q=query,
         fields="nextPageToken, files(id, name, mimeType)"
