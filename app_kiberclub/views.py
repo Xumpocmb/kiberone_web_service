@@ -360,7 +360,7 @@ def get_portfolio_link(client_name) -> str | None:
 
     drive_service = build('drive', 'v3', credentials=credentials)
 
-
+    client_name = " ".join(client_name.split(" ")[:2])
     query = f"name contains '{client_name}' and mimeType='application/vnd.google-apps.folder'"
     results = drive_service.files().list(
         q=query,
