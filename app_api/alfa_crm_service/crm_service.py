@@ -376,3 +376,32 @@ def get_client_lesson_name(branch_id: int, subject_id: int | None = None) -> dic
     if response_data and response_data.get("total") != 0:
         return response_data
     return {"total": 0}
+
+
+def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> dict | None:
+    data = {"page": 0}
+    params = {
+        "customer_id": user_crm_id,
+    }
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/cgi/customer"
+
+    logger.debug("Попытка получить группы пользователя (ID)")
+    response_data = send_request_to_crm(url=url, data=data, params=params)
+    if response_data and response_data.get('total', 0) != 0:
+        return response_data
+    return {"total": 0}
+
+
+def get_group_link_from_crm(branch_id: int, group_id: int) -> dict | None:
+    data = {"id": group_id, "page": 0}
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/group/index"
+
+    response_data = send_request_to_crm(url=url, data=data, params=None)
+    if response_data:
+        if response_data.get("total") != 0:
+            return response_data
+        return {"total": 0}
+    else:
+        logger.debug("Не удалось получить ссылку на группу.")
+        return {"total": 0}
+

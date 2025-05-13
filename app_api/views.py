@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from app_api.alfa_crm_service.crm_service import (
     find_user_by_phone,
     create_user_in_crm,
-    get_client_lessons,
+    get_client_lessons, get_user_groups_from_crm, get_group_link_from_crm,
 )
 from rest_framework import status
 from rest_framework.response import Response
@@ -718,7 +718,7 @@ def get_manager_by_room_id(request, room_id: int):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        manager = location.managers.first()
+        manager = location.location_manager
         if not manager:
             return Response(
                 {"success": False, "message": "Менеджер для локации не найден."},
@@ -803,7 +803,7 @@ def get_client_payment_data(request) -> Response:
             )
 
         # Находим пользователя
-        user = AppUser.objects.filter(id=user_id).first()
+        user = AppUser.objects.filter(telegram_id=user_id).first()
         if not user:
             return Response(
                 {"success": False, "message": "Пользователь не найден"},
@@ -836,6 +836,53 @@ def get_client_payment_data(request) -> Response:
             {"success": True, "data": payment_data},
             status=status.HTTP_200_OK,
         )
+    except Exception as e:
+        return Response(
+            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+
+@api_view(["GET"])
+def get_user_tg_links(request) -> Response:
+    try:
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response(
+                {"success": False, "message": "user_id обязателен"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = AppUser.objects.filter(telegram_id=user_id).first()
+        if not user:
+            return Response(
+                {"success": False, "message": "Пользователь не найден"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        clients = Client.objects.filter(user=user)
+        if not clients.exists():
+            return Response(
+                {"success": False, "message": "У пользователя нет клиентов"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        for client in clients:
+            group_tg_links: list = []
+            user_groups_data: dict = get_user_groups_from_crm(client.branch_id, client.crm_id)
+            if user_groups_data.get('total', 0) > 0:
+                group_ids = []
+                for group_item in user_groups_data["items"]:
+                    group_ids.append(group_item["group_id"])
+
+                if group_ids:
+                    for group_id in group_ids:
+                        group_link_data = get_group_link_from_crm(client.branch_id, group_id)
+                        if group_link_data.get('total', 0) > 0:
+                            group_tg_link = group_link_data.get("items", [])[0].get("note", None)
+                            group_tg_links.append(group_tg_link)
+            return Response({"success": True, "data": group_tg_links}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response(
             {"success": False, "message": f"Ошибка сервера: {str(e)}"},
