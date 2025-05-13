@@ -1,7 +1,7 @@
 @font-face {
     font-family: 'pf_beausans_prolight';
     src: url('/static/fonts/PFBeauSansPro-Light.ttf');
-         url('/static/fonts/PFBeauSansPro-Light.ttf') format('truetype');
+url('/static/fonts/PFBeauSansPro-Light.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -10,7 +10,7 @@
 @font-face {
     font-family: 'franklin_gothic_mediumregular';
     src: url('/static/fonts/Franklin_Gothic_Medium.ttf');
-         url('/static/fonts/Franklin_Gothic_Medium.ttf') format('truetype');
+url('/static/fonts/Franklin_Gothic_Medium.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -18,7 +18,7 @@
 
 html {
     width: 100%;
-    height: 200vh;
+    /*height: 200vh;*/
     font-family: 'pf_beausans_prolight';
     font-size: 4vw;
     overflow-x: hidden;
@@ -43,12 +43,11 @@ span {
     padding: 3vw;
     border-radius: 2vw;
     display: flex;
-    width: 81vw;
     max-height: 50vw;
     font-size: 4vw;
     overflow: auto;
     scroll-snap-type: y mandatory;
-    border: 0.5vw solid #F6C90E; 
+    border: 0.5vw solid #F6C90E;
 }
 
 p {
@@ -68,18 +67,19 @@ a {
     text-align: center;
 }
 
-textarea {
-    width: 80vw;
-    height: 20vw;
+
+#main {
+    padding: 2vw;
 }
 
 
 #profileImg {
     width: 45vw;
     height: 45vw;
-    margin-left: 5vw;
+    /* margin-left: 5vw; */
     margin-bottom: -5vw;
 }
+
 
 #walletImg {
     width: 5vw;

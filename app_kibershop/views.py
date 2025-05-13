@@ -178,10 +178,10 @@ def make_order(request):
                     user_orders = Order.objects.filter(user__crm_id=client_id)
                     order_data = []
                     for order in user_orders:
-                        for item in order.items.all():  # Получаем все позиции заказа
+                        for item in order.items.all():
                             product_name = item.product.name
                             quantity = item.quantity
-                            order_data.append(f"{product_name} ({quantity} шт.)")
+                            order_data.append(f"Товар: {product_name} | Количество ({quantity} шт.) | Стоимость: {item.product.price}")
 
                     order_info = "\n".join(order_data)
 

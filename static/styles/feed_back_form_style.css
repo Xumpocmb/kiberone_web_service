@@ -30,6 +30,7 @@ i {
     background-color: #fff;
 }
 
+
 textarea {
     font-size: 5vw;
     border: 0.5vw solid #F6C90E;
@@ -38,7 +39,7 @@ textarea {
     border-radius: 2vw;
     padding: 3vw;
     /* margin-left: -1vw; */
-    width: 81vw;
+    width: inherit;
 }
 
 
