@@ -25,7 +25,7 @@
                         <option value="{{ client.crm_id }}">{{ client.name }}</option>
                     {% endfor %}
                 </select>
-                <button type="submit" id="open">Перейти в KIBERhub</button>
+                <button type="submit" id="open" onclick="changeButtonText()">Перейти в KIBERhub</button>
             {% else %}
                 <p class="no-profiles">Как бы мы не старались, но не нашли ни одного профиля.</p>
             {% endif %}
@@ -39,4 +39,13 @@
     </section>
 </div>
 </body>
+<script>
+    function changeButtonText() {
+        const button = document.getElementById("open");
+        button.innerText = "Загрузка данных...";
+        button.disabled = true;
+        let formElement = document.getElementById("profileForm");
+        formElement.submit();
+    }
+</script>
 </html>

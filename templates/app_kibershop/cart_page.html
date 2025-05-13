@@ -44,7 +44,7 @@
         </div>
         <form id="orderForm" action="{% url 'app_kibershop:make_order' %}" method="post">
             {% csrf_token %}
-            <button type="submit" id="fullOrderButton"><img src="{% static 'img/kibershop/money.svg' %}" id="fullOrderButtonImg">Предзаказ</button>
+            <button type="submit" id="fullOrderButton" onclick="changeButtonText()"><img src="{% static 'img/kibershop/money.svg' %}" id="fullOrderButtonImg">Предзаказ</button>
         </form>
 
     </section>
@@ -56,6 +56,15 @@
 
     </section>
     {% endif %}
+    <script>
+    function changeButtonText() {
+        const button = document.getElementById("fullOrderButton");
+        button.innerText = "Формируем заказ...";
+        button.disabled = true;
+        let formElement = document.getElementById("orderForm");
+        formElement.submit();
+    }
+</script>
     </body>
 {% endblock %}
 
