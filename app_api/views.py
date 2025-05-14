@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from app_api.alfa_crm_service.crm_service import (
     find_user_by_phone,
     create_user_in_crm,
-    get_client_lessons, get_user_groups_from_crm, get_group_link_from_crm,
+    get_client_lessons, get_user_groups_from_crm, get_group_link_from_crm, find_client_by_id,
 )
 from rest_framework import status
 from rest_framework.response import Response
@@ -104,7 +104,10 @@ def find_user_in_db_view(request) -> Response:
                 status=status.HTTP_200_OK,
             )
         else:
-            return Response({"success": False}, status=status.HTTP_200_OK)
+            return Response(
+                {"success": False, "message": "Пользователь не найден"},
+                status=status.HTTP_404_NOT_FOUND
+            )
     except Exception as e:
         return Response(
             {"success": False, "message": f"Ошибка при поиске пользователя: {str(e)}"},
@@ -159,6 +162,12 @@ def register_user_in_db_view(request) -> Response:
                 {
                     "success": False,
                     "message": "Пользователь уже зарегистрирован в базе данных",
+                    "user": {
+                        "id": user.id,
+                        "telegram_id": user.telegram_id,
+                        "username": user.username,
+                        "phone_number": user.phone_number,
+                    },
                 },
                 status=status.HTTP_200_OK,
             )
@@ -887,4 +896,49 @@ def get_user_tg_links(request) -> Response:
         return Response(
             {"success": False, "message": f"Ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["GET"])
+def find_client_by_id_view(request) -> Response:
+    try:
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response(
+                {"success": False, "message": "user_id обязателен"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = AppUser.objects.filter(telegram_id=user_id).first()
+        if not user:
+            return Response(
+                {"success": False, "message": "Пользователь не найден"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        clients = Client.objects.filter(user=user)
+        if not clients.exists():
+            return Response(
+                {"success": False, "message": "У пользователя нет клиентов"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        results = []
+        for client in clients:
+            result = find_client_by_id(client.branch_id, client.crm_id)
+            if result:
+                results.append({"client_crm_id": client.crm_id, "data": result})
+            else:
+                results.append({"client_crm_id": client.crm_id, "error": "Не удалось получить данные"})
+
+        return Response({
+            "success": True,
+            "results": results
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.exception(f"Ошибка при поиске клиента: {e}")
+        return Response(
+            {"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

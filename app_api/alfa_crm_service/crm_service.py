@@ -115,11 +115,6 @@ def find_user_by_phone(phone_number: str) -> dict | None:
     """
     logger.info(f"Начинается поиск пользователя по номеру телефона: {phone_number}")
 
-    token = get_crm_token()
-    if not token:
-        logger.error("Не удалось получить токен для поиска пользователя.")
-        return None
-
     def fetch_data(branch: str, status: int) -> dict | None:
         """
         Выполнение одного запроса к CRM.
@@ -142,7 +137,6 @@ def find_user_by_phone(phone_number: str) -> dict | None:
             )
         return response
 
-    # Собираем все комбинации (branch, status)
     tasks = [
         (str(branch), status)
         for status in client_is_study_statuses
@@ -164,7 +158,6 @@ def find_user_by_phone(phone_number: str) -> dict | None:
             result = future.result()
             if result is not None:
                 results.append(result)
-                # logger.info(f"Добавлен результат: {result}")
             else:
                 logger.warning("Получен пустой результат, пропускаем.")
 
@@ -405,3 +398,20 @@ def get_group_link_from_crm(branch_id: int, group_id: int) -> dict | None:
         logger.debug("Не удалось получить ссылку на группу.")
         return {"total": 0}
 
+
+def find_client_by_id(branch_id, crm_id):
+    data = {"id": crm_id}
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer/index"
+    try:
+        response: dict = send_request_to_crm(url=url, data=data, params=None)
+        if response:
+            logger.info("Клиент найден")
+            print(response)
+            return response
+        else:
+            logger.error(
+                f"Клиент не найден: {response}"
+            )
+            return None
+    except Exception as e:
+        return None

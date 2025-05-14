@@ -12,6 +12,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = os.getenv('DEBUG') == 'True'
 
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN_TEST") if DEBUG else os.getenv("TELEGRAM_BOT_TOKEN")
+
 CSRF_TRUSTED_ORIGINS = [
     "https://web.80-249-146-181.nip.io"
 ]
@@ -35,6 +37,7 @@ INSTALLED_APPS = [
     'rest_framework',
     # 'rest_framework.authtoken',
     "django_celery_results",
+    "django_celery_beat",
 
     # user apps
     'app_api',
