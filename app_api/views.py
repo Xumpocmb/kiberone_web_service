@@ -804,48 +804,59 @@ def get_user_balances(request) -> Response:
 @api_view(["POST"])
 def get_client_payment_data(request) -> Response:
     try:
+        logger.info("Начало обработки get_client_payment_data")
+
         user_id = request.data.get("user_id")
         if not user_id:
+            logger.warning("Не передан user_id")
             return Response(
                 {"success": False, "message": "user_id обязателен"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         # Находим пользователя
+        logger.debug(f"Поиск пользователя с telegram_id={user_id}")
         user = AppUser.objects.filter(telegram_id=user_id).first()
         if not user:
+            logger.warning(f"Пользователь с telegram_id={user_id} не найден")
             return Response(
                 {"success": False, "message": "Пользователь не найден"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Получаем клиентов пользователя
+        logger.debug(f"Поиск клиентов для пользователя {user_id}")
         clients = Client.objects.filter(user=user)
         if not clients.exists():
+            logger.warning(f"У пользователя {user_id} нет клиентов")
             return Response(
                 {"success": False, "message": "У пользователя нет клиентов"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Формируем данные о балансе для каждого клиента
+        logger.debug(f"Сбор данных по клиентам пользователя {user_id}")
         clients_data = [
             {
                 "crm_id": client.crm_id,
                 "branch_id": client.branch_id,
                 "balance": float(client.balance) if client.balance else 0.0,
+                "name": client.name,
             }
             for client in clients
         ]
 
+        logger.debug(f"Обработка платежных данных для {len(clients_data)} клиентов")
         payment_data = []
         for client_data in clients_data:
-            payment_data.append(set_pay(client_data))
+            processed = set_pay(client_data)
+            payment_data.append(processed)
 
+        logger.info(f"Данные успешно обработаны для {len(payment_data)} клиентов")
         return Response(
             {"success": True, "data": payment_data},
             status=status.HTTP_200_OK,
         )
     except Exception as e:
+        logger.error(f"Ошибка сервера: {str(e)}", exc_info=True)
         return Response(
             {"success": False, "message": f"Ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -272,11 +272,6 @@ def send_request_to_crm(url: str, data: dict, params: dict | None) -> dict | Non
 
 
 def get_client_lessons(user_crm_id: int, branch_id: int, page: int | None = None, lesson_status: int = 1, lesson_type: int = 2) -> dict | None:
-    token = get_crm_token()
-    if not token:
-        logger.error("Не удалось получить токен для создания пользователя.")
-        return None
-
     data = {
         "customer_id": user_crm_id,
         "status": lesson_status,  # 1 - запланирован урок, 2 - отменен, 3 - проведен
@@ -301,14 +296,14 @@ def get_client_lessons(user_crm_id: int, branch_id: int, page: int | None = None
 
 def get_curr_tariff(user_crm_id, branch_id, curr_date):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer-tariff/index?customer_id={user_crm_id}"
-    customer_tariffs = send_request_to_crm(url, "{}", None)
+    customer_tariffs = send_request_to_crm(url, {}, None)
     for tariff in sorted(customer_tariffs.get("items"), key=lambda x: datetime.strptime(x.get("e_date"), '%d.%m.%Y')):
         tariff_end_date = datetime.strptime(tariff.get("e_date"), '%d.%m.%Y')
         tariff_begin_date = datetime.strptime(tariff.get("b_date"), '%d.%m.%Y')
         if tariff_end_date.date() >= curr_date >= tariff_begin_date.date():
             price = float(get_tariff_price(branch_id, tariff.get("tariff_id")))
             discount = float(get_curr_discount(branch_id, user_crm_id, curr_date))
-            tariff.update({"price": price * (1 - discount/100)})
+            tariff.update({"price": price * (1 - discount / 100)})
             return tariff
 
 
@@ -316,8 +311,7 @@ def get_tariff_price(branch_id, tariff_id):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/tariff/index"
     page = 0
     data = {"page": 0}
-    data_json = json.dumps(data)
-    tariff_objects = send_request_to_crm(url, data_json, None)
+    tariff_objects = send_request_to_crm(url, data, None)
     tariff_objects_items = tariff_objects.get("items")
     last_page = 1
     if tariff_objects.get('count') != 0:
@@ -327,9 +321,8 @@ def get_tariff_price(branch_id, tariff_id):
             if tariff.get("id") == tariff_id:
                 return tariff.get("price")
         page += 1
-        data = {page: 0}
-        data_json = json.dumps(data)
-        tariff_objects = send_request_to_crm(url, data_json, None)
+        data = {"page": 0}
+        tariff_objects = send_request_to_crm(url, data, None)
         tariff_objects_items = tariff_objects.get("items")
     return []
 
@@ -338,8 +331,7 @@ def get_curr_discount(branch_id, user_crm_id, curr_date):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/discount/index"
     page = 0
     data = {"customer_id": user_crm_id, "page": 0}
-    data_json = json.dumps(data)
-    discounts = send_request_to_crm(url, data_json, None)
+    discounts = send_request_to_crm(url, data, None)
     discounts_items = discounts.get("items")
     last_page = 1
     if discounts.get('count') != 0:
@@ -352,8 +344,7 @@ def get_curr_discount(branch_id, user_crm_id, curr_date):
                 return discount.get("amount")
         page += 1
         data.update({"page": page})
-        data_json = json.dumps(data)
-        discounts = send_request_to_crm(url, data_json, None)
+        discounts = send_request_to_crm(url, data, None)
         discounts_items = discounts.get("items")
     return 0
 
