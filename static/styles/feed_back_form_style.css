@@ -52,11 +52,12 @@ form {
 }
 
 #sendButton {
-    width: 25vw;
+    width: fit-content;
     display: flex;
     justify-content: center;
     align-items: center;
 }
+
 
 #feedback {
     margin-top: 3vw;
