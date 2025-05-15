@@ -695,12 +695,21 @@ def get_location_by_id(request, location_id: int):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        # Получаем данные менеджера, если он есть
+        manager_data = None
+        if location.location_manager:
+            manager_data = {
+                "id": location.location_manager.id,
+                "name": location.location_manager.name,
+                "telegram_link": location.location_manager.telegram_link
+            }
+
         data = {
             "id": location.id,
             "branch_id": location.branch.id if location.branch else None,
             "name": location.name,
             "sheet_name": location.sheet_name,
-            "location_manager_id": location.location_manager,
+            "location_manager": manager_data,
             "map_url": location.map_url,
         }
         return Response(
