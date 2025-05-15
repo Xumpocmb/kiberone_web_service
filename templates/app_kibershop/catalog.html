@@ -15,7 +15,7 @@
     <section id="fixedCartSection">
         <p id="productInCartCount">{% if carts.total_quantity %}{{ carts.total_quantity }}{% else %}0{% endif %}</p>
         <a href="{% url 'app_kibershop:cart' %}" id="fixedCartButton">
-            <img src="{% static 'img/kibershop/cart_logo.svg' %}" id="fixedCartButtonImg" alt="Корзина">
+            <img src="{% static 'img/kibershop/cart_logo.png' %}" id="fixedCartButtonImg" alt="Корзина">
         </a>
     </section>
     <section id="kibershopText">
@@ -51,7 +51,7 @@
                                         </section>
                                         <section class="buttonsRowSection">
                                             <button class="cartButton" id="cartButton"><img
-                                                    src="{% static 'img/kibershop/cart_logo.svg' %}"
+                                                    src="{% static 'img/kibershop/cart_logo.png' %}"
                                                     class="iconImg" alt="Корзина"></button>
                                         </section>
                                     </section>
