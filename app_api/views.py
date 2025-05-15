@@ -896,9 +896,8 @@ def get_user_tg_links(request) -> Response:
                 {"success": False, "message": "У пользователя нет клиентов"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
+        group_tg_links: list = []
         for client in clients:
-            group_tg_links: list = []
             user_groups_data: dict = get_user_groups_from_crm(client.branch_id, client.crm_id)
             if user_groups_data.get('total', 0) > 0:
                 group_ids = []
@@ -911,7 +910,7 @@ def get_user_tg_links(request) -> Response:
                         if group_link_data.get('total', 0) > 0:
                             group_tg_link = group_link_data.get("items", [])[0].get("note", None)
                             group_tg_links.append(group_tg_link)
-            return Response({"success": True, "data": group_tg_links}, status=status.HTTP_200_OK)
+        return Response({"success": True, "data": group_tg_links}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response(
             {"success": False, "message": f"Ошибка сервера: {str(e)}"},
