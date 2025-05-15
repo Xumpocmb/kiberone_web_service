@@ -280,3 +280,25 @@ class SocialLink(models.Model):
         db_table = "social_links"
         verbose_name = "Социальная ссылка"
         verbose_name_plural = "Социальные ссылки"
+
+
+class BroadcastMessage(models.Model):
+    message_text = models.TextField(verbose_name="Текст сообщения")
+    image = models.ImageField(
+        upload_to='broadcast_images/',
+        blank=True,
+        null=True,
+        verbose_name="Изображение"
+    )
+    status_filter = models.CharField(
+        max_length=5,
+        choices=AppUser.CLIENT_STATUS,
+        blank=True,
+        null=True,
+        verbose_name="Фильтр по статусу (оставьте пустым для всех)"
+    )
+
+
+    class Meta:
+        verbose_name = "Рассылка"
+        verbose_name_plural = "Рассылки"

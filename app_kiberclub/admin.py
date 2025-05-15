@@ -1,4 +1,10 @@
-from django.contrib import admin
+import logging
+from time import sleep
+
+import requests
+from django.conf import settings
+from django.contrib import admin, messages
+
 from app_kiberclub.models import (
     AppUser,
     Client,
@@ -11,8 +17,10 @@ from app_kiberclub.models import (
     SalesManager,
     SocialLink,
     Location,
-    Manager,
+    Manager, BroadcastMessage,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ClientInline(admin.TabularInline):
@@ -125,8 +133,8 @@ class ClientBonusAdmin(admin.ModelAdmin):
 
 @admin.register(SalesManager)
 class SalesManagerAdmin(admin.ModelAdmin):
-    list_display = ("name", "telegram_link", "get_branches")  # Отображение филиалов
-    filter_horizontal = ("branches",)  # Удобный виджет для управления филиалами
+    list_display = ("name", "telegram_link", "get_branches")
+    filter_horizontal = ("branches",)
 
     def get_branches(self, obj):
         return ", ".join([branch.name for branch in obj.branches.all()])
@@ -148,3 +156,74 @@ class LocationAdmin(admin.ModelAdmin):
 @admin.register(Manager)
 class ManagerAdmin(admin.ModelAdmin):
     list_display = ("name", "telegram_link")
+
+
+
+@admin.register(BroadcastMessage)
+class BroadcastMessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'status_filter')
+
+    def save_model(self, request, obj, form, change):
+        obj.sent_by = request.user
+        super().save_model(request, obj, form, change)
+
+        users = AppUser.objects.exclude(telegram_id__isnull=True).exclude(telegram_id__exact='')
+
+        if obj.status_filter:
+            users = users.filter(status=obj.status_filter)
+
+        success = 0
+        fail = 0
+
+        for user in users:
+            if send_telegram_message(
+                    chat_id=user.telegram_id,
+                    text=obj.message_text,
+                    image_path=obj.image.path if obj.image else None
+            ):
+                success += 1
+            else:
+                fail += 1
+            sleep(0.2)
+
+        if success > 0:
+            messages.success(request, f"Успешно отправлено: {success} сообщений")
+        if fail > 0:
+            messages.warning(request, f"Не удалось отправить: {fail} сообщений")
+
+
+def send_telegram_message(chat_id, text, image_path=None):
+    """
+    Отправка сообщения через Telegram Bot API
+    """
+    if not settings.TELEGRAM_BOT_TOKEN:
+        logger.error("TELEGRAM_BOT_TOKEN не установлен в settings.py")
+        return False
+
+    base_url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/"
+
+    try:
+        if image_path:
+            url = base_url + "sendPhoto"
+            with open(image_path, 'rb') as photo:
+                files = {'photo': photo}
+                data = {'chat_id': chat_id, 'caption': text}
+                response = requests.post(url, files=files, data=data)
+        else:
+            url = base_url + "sendMessage"
+            data = {
+                'chat_id': chat_id,
+                'text': text,
+                'parse_mode': 'HTML'
+            }
+            response = requests.post(url, data=data)
+
+        if response.status_code != 200:
+            logger.error(f"Ошибка Telegram API: {response.status_code} - {response.text}")
+            return False
+
+        return True
+
+    except Exception as e:
+        logger.error(f"Ошибка при отправке сообщения: {str(e)}")
+        return False
