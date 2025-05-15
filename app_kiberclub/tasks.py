@@ -1,4 +1,3 @@
-# app_kiberclub/tasks.py
 import logging
 from time import sleep
 
