@@ -156,7 +156,7 @@ class Client(models.Model):
         "Branch", on_delete=models.CASCADE, verbose_name="Филиал"
     )
     crm_id = models.CharField(
-        max_length=100, unique=True, blank=True, null=True, verbose_name="ID в CRM"
+        max_length=100, blank=True, null=True, verbose_name="ID в CRM"
     )
 
     is_study = models.BooleanField(default=False, verbose_name="Является клиентом")
