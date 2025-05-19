@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 import gspread
 import requests
@@ -213,7 +214,7 @@ def save_review_from_page(request):
             sheet_url=client.branch.sheet_url,
             sheet_name=location_sheet_name,
             child_id=client.crm_id,
-            feedback=feedback
+            feedback= f"{datetime.now().strftime("%Y-%m-%d")}\n{feedback}\n"
         )
         if success:
             return JsonResponse({'status': 'success', "message": "Ваш отзыв сохранен!"}, status=200)
@@ -257,8 +258,11 @@ def save_review_to_google_sheet(sheet_url: str, sheet_name: str, child_id: str, 
                     print("Отзыв пустой. Пропускаем обновление.")
                     return False
 
-                cell = f"{gspread.utils.rowcol_to_a1(index, feedback_column_index)}"
-                sheet.update(cell, [[feedback]])
+                cell = sheet.cell(index, feedback_column_index)
+                existing_feedback = cell.value or ""
+                updated_feedback = f"{existing_feedback}\n{feedback}".strip()
+
+                sheet.update_cell(index, feedback_column_index, updated_feedback)
                 return True
             except Exception as e:
                 print(f"Ошибка при обновлении ячейки: {e}")
