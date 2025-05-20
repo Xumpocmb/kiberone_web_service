@@ -109,7 +109,11 @@ def make_order(request):
 
         # общая сумма заказа
         try:
-            total_sum = Cart.objects.filter(user=user_in_db).total_sum()
+            cart_items = Cart.objects.filter(user=user_in_db)
+            if not cart_items.exists():
+                messages.error(request, "Ваша корзина пуста.", extra_tags="danger")
+                return redirect(request.META.get('HTTP_REFERER'))
+            total_sum = cart_items.total_sum()
         except Cart.DoesNotExist as e:
             return redirect(request.META.get('HTTP_REFERER'))
 
