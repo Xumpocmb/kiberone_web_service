@@ -1,1 +1,1 @@
-from . import sync_crm_clients, check_clients_balance_and_notify
+from . import crm_sync, check_clients_balance_and_notify

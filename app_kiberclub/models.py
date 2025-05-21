@@ -173,7 +173,7 @@ class Client(models.Model):
         blank=True, null=True, verbose_name="Количество оплаченных занятий"
     )
     has_scheduled_lessons = models.BooleanField(
-        default=False, verbose_name="Есть запланированные уроки"
+        default=False, verbose_name="Есть запланированные уроки", null=True, blank=True,
     )
 
     def __str__(self):
