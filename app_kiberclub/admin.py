@@ -68,7 +68,7 @@ class ClientAdmin(admin.ModelAdmin):
     Админ-класс для модели Client.
     """
 
-    list_display = ["user", "branch", "crm_id", "is_study"]
+    list_display = ["__str__", "branch", "crm_id", "is_study"]
     list_filter = ["is_study", "branch"]
     search_fields = ["crm_id", "user__username", "user__telegram_id"]
 

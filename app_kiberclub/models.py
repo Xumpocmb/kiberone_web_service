@@ -177,7 +177,7 @@ class Client(models.Model):
     )
 
     def __str__(self):
-        return f"Клиент {self.name or 'noname'} (Родитель: {self.user})"
+        return f"{self.name or 'noname'} | (Родитель: {self.user})"
 
     class Meta:
         db_table = "clients"
