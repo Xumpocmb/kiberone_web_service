@@ -140,3 +140,4 @@ info.txt
 /static/fonts/
 /static/fonts/*
 /*.txt
+/.pylintrc
