@@ -19,7 +19,6 @@ TELEGRAM_BOT_TOKEN = (
 CSRF_TRUSTED_ORIGINS = ["https://web.80-249-146-181.nip.io"]
 
 ALLOWED_HOSTS = [
-    "*",
     "web.80-249-146-181.nip.io",
     "80.249.146.181",
 ]
