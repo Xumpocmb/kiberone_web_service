@@ -16,7 +16,6 @@ TELEGRAM_BOT_TOKEN = (
 )
 
 CSRF_TRUSTED_ORIGINS = [
-    "kiberonetgbot.online",
     "https://kiberonetgbot.online", 
     "https://93.85.88.72", 
     "http://127.0.0.1",
