@@ -20,6 +20,9 @@ CSRF_TRUSTED_ORIGINS = ["https://web.80-249-146-181.nip.io"]
 ALLOWED_HOSTS = [
     "https://kiberonetgbot.online",
     "93.85.88.72",
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
 ]
 
 
