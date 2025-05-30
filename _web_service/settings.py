@@ -6,7 +6,6 @@ from pathlib import Path
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-# test
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
@@ -19,8 +18,8 @@ TELEGRAM_BOT_TOKEN = (
 CSRF_TRUSTED_ORIGINS = ["https://web.80-249-146-181.nip.io"]
 
 ALLOWED_HOSTS = [
-    "web.80-249-146-181.nip.io",
-    "80.249.146.181",
+    "https://kiberonetgbot.online",
+    "93.85.88.72",
 ]
 
 
@@ -121,7 +120,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Настройки Celery
 CELERY_BROKER_URL = "redis://localhost:6379/0"
-# CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_TIMEZONE = "Europe/Moscow"
