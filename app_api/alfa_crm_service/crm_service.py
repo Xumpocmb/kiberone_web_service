@@ -38,6 +38,7 @@ def get_redis_client():
     """
     return redis.StrictRedis(host="localhost", port=6379, db=0, decode_responses=True)
 
+
 @app.task
 def update_crm_token():
     """
@@ -128,9 +129,7 @@ def find_user_by_phone(phone_number: str) -> dict | None:
 
         response = send_request_to_crm(url=url, data=data, params=None)
         if response:
-            logger.info(
-                f"Успешный ответ для branch={branch}, status={status}"
-            )
+            logger.info(f"Успешный ответ для branch={branch}, status={status}")
         else:
             logger.warning(
                 f"Не удалось получить данные для branch={branch}, status={status}"
@@ -200,9 +199,7 @@ def create_user_in_crm(user_data) -> dict | None:
             logger.info("Пользователь успешно создан.")
             return response
         else:
-            logger.error(
-                f"Ошибка создания пользователя, тело: {response}"
-            )
+            logger.error(f"Ошибка создания пользователя, тело: {response}")
             return None
     except Exception as e:
         logger.error(f"Произошла ошибка при создании пользователя: {e}")
@@ -271,7 +268,13 @@ def send_request_to_crm(url: str, data: dict, params: dict | None) -> dict | Non
     return None
 
 
-def get_client_lessons(user_crm_id: int, branch_id: int, page: int | None = None, lesson_status: int = 1, lesson_type: int = 2) -> dict | None:
+def get_client_lessons(
+    user_crm_id: int,
+    branch_id: int,
+    page: int | None = None,
+    lesson_status: int = 1,
+    lesson_type: int = 2,
+) -> dict | None:
     data = {
         "customer_id": user_crm_id,
         "status": lesson_status,  # 1 - запланирован урок, 2 - отменен, 3 - проведен
@@ -297,9 +300,12 @@ def get_client_lessons(user_crm_id: int, branch_id: int, page: int | None = None
 def get_curr_tariff(user_crm_id, branch_id, curr_date):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer-tariff/index?customer_id={user_crm_id}"
     customer_tariffs = send_request_to_crm(url, {}, None)
-    for tariff in sorted(customer_tariffs.get("items"), key=lambda x: datetime.strptime(x.get("e_date"), '%d.%m.%Y')):
-        tariff_end_date = datetime.strptime(tariff.get("e_date"), '%d.%m.%Y')
-        tariff_begin_date = datetime.strptime(tariff.get("b_date"), '%d.%m.%Y')
+    for tariff in sorted(
+        customer_tariffs.get("items"),
+        key=lambda x: datetime.strptime(x.get("e_date"), "%d.%m.%Y"),
+    ):
+        tariff_end_date = datetime.strptime(tariff.get("e_date"), "%d.%m.%Y")
+        tariff_begin_date = datetime.strptime(tariff.get("b_date"), "%d.%m.%Y")
         if tariff_end_date.date() >= curr_date >= tariff_begin_date.date():
             price = float(get_tariff_price(branch_id, tariff.get("tariff_id")))
             discount = float(get_curr_discount(branch_id, user_crm_id, curr_date))
@@ -314,8 +320,8 @@ def get_tariff_price(branch_id, tariff_id):
     tariff_objects = send_request_to_crm(url, data, None)
     tariff_objects_items = tariff_objects.get("items")
     last_page = 1
-    if tariff_objects.get('count') != 0:
-        last_page = tariff_objects.get('total') // tariff_objects.get('count')
+    if tariff_objects.get("count") != 0:
+        last_page = tariff_objects.get("total") // tariff_objects.get("count")
     while page < last_page:
         for tariff in tariff_objects_items:
             if tariff.get("id") == tariff_id:
@@ -334,12 +340,14 @@ def get_curr_discount(branch_id, user_crm_id, curr_date):
     discounts = send_request_to_crm(url, data, None)
     discounts_items = discounts.get("items")
     last_page = 1
-    if discounts.get('count') != 0:
-        last_page = discounts.get('total') // discounts.get('count')
+    if discounts.get("count") != 0:
+        last_page = discounts.get("total") // discounts.get("count")
     while page < last_page:
-        for discount in sorted(discounts_items, key=lambda x: datetime.strptime(x.get("end"), '%d.%m.%Y')):
-            discount_end_date = datetime.strptime(discount.get("end"), '%d.%m.%Y')
-            discount_begin_date = datetime.strptime(discount.get("begin"), '%d.%m.%Y')
+        for discount in sorted(
+            discounts_items, key=lambda x: datetime.strptime(x.get("end"), "%d.%m.%Y")
+        ):
+            discount_end_date = datetime.strptime(discount.get("end"), "%d.%m.%Y")
+            discount_begin_date = datetime.strptime(discount.get("begin"), "%d.%m.%Y")
             if discount_end_date.date() >= curr_date >= discount_begin_date.date():
                 return discount.get("amount")
         page += 1
@@ -349,14 +357,16 @@ def get_curr_discount(branch_id, user_crm_id, curr_date):
     return 0
 
 
-def get_client_lesson_name(branch_id: int, subject_id: int | None = None) -> dict | None:
-    data = {
-        "id": subject_id,
-        "active": True,
-        "page": 0
-    }
+def get_client_lesson_name(
+    branch_id: int, subject_id: int | None = None
+) -> dict | None:
+    data = {"id": subject_id, "active": True, "page": 0}
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/subject/index"
-    response_data = send_request_to_crm(url, data, params=None,)
+    response_data = send_request_to_crm(
+        url,
+        data,
+        params=None,
+    )
     if response_data and response_data.get("total") != 0:
         return response_data
     return {"total": 0}
@@ -371,7 +381,7 @@ def get_user_groups_from_crm(branch_id: int, user_crm_id: int) -> dict | None:
 
     logger.debug("Попытка получить группы пользователя (ID)")
     response_data = send_request_to_crm(url=url, data=data, params=params)
-    if response_data and response_data.get('total', 0) != 0:
+    if response_data and response_data.get("total", 0) != 0:
         return response_data
     return {"total": 0}
 
@@ -397,12 +407,9 @@ def find_client_by_id(branch_id, crm_id):
         response: dict = send_request_to_crm(url=url, data=data, params=None)
         if response:
             logger.info("Клиент найден")
-            print(response)
             return response
         else:
-            logger.error(
-                f"Клиент не найден: {response}"
-            )
+            logger.error(f"Клиент не найден: {response}")
             return None
     except Exception as e:
         return None

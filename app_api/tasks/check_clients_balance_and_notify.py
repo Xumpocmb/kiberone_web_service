@@ -37,7 +37,7 @@ def check_clients_balance_and_notify():
     Проверяет клиентов и отправляет уведомления тем, у кого paid_lesson_count < 1
     """
     now = timezone.now()
-    logger.info("Запущена проверка клиентов с low balance")
+    logger.info("Запущена проверка баланса клиентов и отправка уведомлений...")
 
     clients = Client.objects.select_related("user").filter(paid_lesson_count__lt=1)
 
