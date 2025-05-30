@@ -15,7 +15,12 @@ TELEGRAM_BOT_TOKEN = (
     os.getenv("TELEGRAM_BOT_TOKEN_TEST") if DEBUG else os.getenv("TELEGRAM_BOT_TOKEN")
 )
 
-CSRF_TRUSTED_ORIGINS = ["https://web.80-249-146-181.nip.io"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://kiberonetgbot.online", 
+    "https://93.85.88.72", 
+    "http://127.0.0.1",
+    "http://localhost",
+    "http://0.0.0.0",]
 
 ALLOWED_HOSTS = [
     "https://kiberonetgbot.online",
