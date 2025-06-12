@@ -16,11 +16,12 @@ TELEGRAM_BOT_TOKEN = (
 )
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://kiberonetgbot.online", 
-    "https://93.85.88.72", 
+    "https://kiberonetgbot.online",
+    "https://93.85.88.72",
     "http://127.0.0.1",
     "http://localhost",
-    "http://0.0.0.0",]
+    "http://0.0.0.0",
+]
 
 ALLOWED_HOSTS = [
     "kiberonetgbot.online",
@@ -175,6 +176,11 @@ LOGGING = {
         "app_api": {
             "handlers": ["console", "file"],
             "level": "INFO",
+            "propagate": True,
+        },
+        "app_kiberclub": {
+            "handlers": ["console", "file"],
+            "level": "DEBUG",
             "propagate": True,
         },
     },
