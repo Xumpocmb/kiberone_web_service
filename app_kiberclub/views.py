@@ -8,7 +8,10 @@ from django.http import JsonResponse, HttpRequest, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from oauth2client.service_account import ServiceAccountCredentials
 
-from app_api.alfa_crm_service.crm_service import get_client_lessons, get_client_lesson_name
+from app_api.alfa_crm_service.crm_service import (
+    get_client_lessons,
+    get_client_lesson_name,
+)
 from app_kiberclub.models import AppUser, Client, Location
 from app_kibershop.models import ClientKiberons
 
@@ -17,7 +20,7 @@ from google.oauth2 import service_account
 
 logger = logging.getLogger(__name__)
 
-CREDENTIALS_FILE = 'kiberone-tg-bot-a43691efe721.json'
+CREDENTIALS_FILE = "kiberone-tg-bot-a43691efe721.json"
 
 
 def index(request: HttpRequest) -> HttpResponse:
@@ -225,7 +228,7 @@ def open_profile(request):
 
 
 def error_page_view(request):
-    return render(request, 'app_kiberclub/error_page.html')
+    return render(request, "app_kiberclub/error_page.html")
 
 
 def get_resume_from_google_sheet(sheet_url: str, sheet_name: str, child_id: str):
@@ -236,31 +239,64 @@ def get_resume_from_google_sheet(sheet_url: str, sheet_name: str, child_id: str)
 
     scope = [
         "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive"
+        "https://www.googleapis.com/auth/drive",
     ]
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(credentials_path, scope)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(
+        credentials_path, scope
+    )
     client = gspread.authorize(credentials)
 
     try:
         sheet = client.open_by_url(sheet_url).worksheet(sheet_name)
     except Exception as e:
+        logger.error(f"Не удалось открыть лист {sheet_name} в таблице {sheet_url}: {e}")
         return "Появится позже"
 
-    data = sheet.get_all_records()
+    try:
+        # Получаем все значения в виде списка списков
+        all_values = sheet.get_all_values()
 
-    for row in data:
-        if str(row.get("ID ребенка")) == str(child_id):
-            resume = row.get("Резюме май 2025", "")
-            return resume.strip()
+        if len(all_values) < 2:
+            logger.warning("Таблица пустая или содержит только заголовки")
+            return "Появится позже"
 
-    return "Появится позже"
+        headers = all_values[0]
+        data_rows = all_values[1:]
+
+        # Находим индексы нужных колонок
+        try:
+            id_col_index = headers.index("ID ребенка")
+        except ValueError:
+            logger.error("В таблице нет столбца 'ID ребенка'")
+            return "Появится позже"
+
+        try:
+            resume_col_index = headers.index("Резюме май 2025")
+        except ValueError:
+            logger.error("В таблице нет столбца 'Резюме май 2025'")
+            return "Появится позже"
+
+        # Поиск нужной строки
+        for row in data_rows:
+            if len(row) > max(id_col_index, resume_col_index) and str(
+                row[id_col_index]
+            ) == str(child_id):
+                resume = row[resume_col_index].strip()
+                return resume or "Появится позже"
+
+        logger.info(f"Ребенок с ID {child_id} не найден в таблице.")
+        return "Появится позже"
+
+    except Exception as e:
+        logger.exception(f"Ошибка при чтении данных из таблицы: {e}")
+        return "Появится позже"
 
 
 def save_review_from_page(request):
     if request.method == "POST":
         crm_id = request.POST.get("crm_id")
         room_id = request.POST.get("room_id")
-        feedback = request.POST.get('feedbackInput')
+        feedback = request.POST.get("feedbackInput")
 
         client = get_object_or_404(Client, crm_id=crm_id)
         location = Location.objects.filter(location_crm_id=room_id).first()
@@ -270,12 +306,20 @@ def save_review_from_page(request):
             sheet_url=client.branch.sheet_url,
             sheet_name=location_sheet_name,
             child_id=client.crm_id,
-            feedback= f"{datetime.now().strftime("%Y-%m-%d")}\n{feedback}\n"
+            feedback=f"{datetime.now().strftime("%Y-%m-%d")}\n{feedback}\n",
         )
         if success:
-            return JsonResponse({'status': 'success', "message": "Ваш отзыв сохранен!"}, status=200)
+            return JsonResponse(
+                {"status": "success", "message": "Ваш отзыв сохранен!"}, status=200
+            )
         else:
-            return JsonResponse({'status': 'error', "message": "Произошла ошибка при сохранении отзыва"}, status=400)
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "Произошла ошибка при сохранении отзыва",
+                },
+                status=400,
+            )
 
 
 def save_review_to_google_sheet(
@@ -358,37 +402,41 @@ def save_review_to_google_sheet(
     return False
 
 
-def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, password: str) -> str | None:
+def get_kiberons_count(
+    user_crm_id, user_crm_name_full: str, login: str, password: str
+) -> str | None:
     cookies = {
-        'developsess': 'e65294731ff311d892841471f7beec1e',
+        "developsess": "e65294731ff311d892841471f7beec1e",
     }
     headers = {
-        'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-        'accept-language': 'ru,en-US;q=0.9,en;q=0.8',
-        'cache-control': 'max-age=0',
-        'content-type': 'application/x-www-form-urlencoded',
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "accept-language": "ru,en-US;q=0.9,en;q=0.8",
+        "cache-control": "max-age=0",
+        "content-type": "application/x-www-form-urlencoded",
         # 'cookie': 'developsess=e65294731ff311d892841471f7beec1e',
-        'origin': 'https://kiber-one.club',
-        'priority': 'u=0, i',
-        'referer': 'https://kiber-one.club/',
-        'sec-ch-ua': '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'document',
-        'sec-fetch-mode': 'navigate',
-        'sec-fetch-site': 'same-origin',
-        'sec-fetch-user': '?1',
-        'upgrade-insecure-requests': '1',
-        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+        "origin": "https://kiber-one.club",
+        "priority": "u=0, i",
+        "referer": "https://kiber-one.club/",
+        "sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
     }
 
     data = {
-        'urltogo': 'https://kiber-one.club/enter/',
-        'login': login,
-        'password': password,
-        'sendloginform': 'Войти',
+        "urltogo": "https://kiber-one.club/enter/",
+        "login": login,
+        "password": password,
+        "sendloginform": "Войти",
     }
-    response = requests.post('https://kiber-one.club/enter/', cookies=cookies, headers=headers, data=data)
+    response = requests.post(
+        "https://kiber-one.club/enter/", cookies=cookies, headers=headers, data=data
+    )
 
     if response.status_code != 200:
         return None
@@ -406,7 +454,7 @@ def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, passwor
         return None
 
     try:
-        soup = BeautifulSoup(response.text, 'lxml')
+        soup = BeautifulSoup(response.text, "lxml")
         if soup is None:
             return None
     except Exception as e:
@@ -418,12 +466,12 @@ def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, passwor
         return None
 
     for child in children_elements:
-        name_element = child.find('div', class_='user_admin_col_name').find('a')
+        name_element = child.find("div", class_="user_admin_col_name").find("a")
         full_name = name_element.text.strip()
-        full_name_splitted = full_name.split(' ')[:2]
-        name = ' '.join(full_name_splitted)
-        if name == ' '.join(user_crm_name_full.split(' ')[:2]):
-            balance_element = child.find('div', class_='user_admin_col_balance')
+        full_name_splitted = full_name.split(" ")[:2]
+        name = " ".join(full_name_splitted)
+        if name == " ".join(user_crm_name_full.split(" ")[:2]):
+            balance_element = child.find("div", class_="user_admin_col_balance")
             balance = balance_element.text.strip()
 
             user = Client.objects.filter(crm_id=user_crm_id).first()
@@ -442,23 +490,26 @@ def get_kiberons_count(user_crm_id, user_crm_name_full: str, login: str, passwor
 
 
 def get_portfolio_link(client_name) -> str | None:
-    SCOPES = ['https://www.googleapis.com/auth/drive ']
-    CREDENTIALS_FILE = 'portfolio-credentials.json'
-    credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
+    SCOPES = ["https://www.googleapis.com/auth/drive "]
+    CREDENTIALS_FILE = "portfolio-credentials.json"
+    credentials = service_account.Credentials.from_service_account_file(
+        CREDENTIALS_FILE, scopes=SCOPES
+    )
 
-    drive_service = build('drive', 'v3', credentials=credentials)
+    drive_service = build("drive", "v3", credentials=credentials)
 
     client_name = " ".join(client_name.split(" ")[:2])
     query = f"name contains '{client_name}' and mimeType='application/vnd.google-apps.folder'"
-    results = drive_service.files().list(
-        q=query,
-        fields="nextPageToken, files(id, name, mimeType)"
-    ).execute()
+    results = (
+        drive_service.files()
+        .list(q=query, fields="nextPageToken, files(id, name, mimeType)")
+        .execute()
+    )
 
-    folders = results.get('files', [])
+    folders = results.get("files", [])
     if not folders:
         return "#"
 
-    folder_id = folders[0]['id']
+    folder_id = folders[0]["id"]
     folder_url = f"https://drive.google.com/drive/folders/{folder_id}"
     return folder_url
