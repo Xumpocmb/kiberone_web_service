@@ -180,7 +180,7 @@ LOGGING = {
         },
         "app_kiberclub": {
             "handlers": ["console", "file"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": True,
         },
     },
