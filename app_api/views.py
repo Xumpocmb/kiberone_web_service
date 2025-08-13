@@ -961,3 +961,4 @@ def find_client_by_id_view(request) -> Response:
             {"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
