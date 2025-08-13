@@ -15,6 +15,12 @@ TELEGRAM_BOT_TOKEN = (
     os.getenv("TELEGRAM_BOT_TOKEN_TEST") if DEBUG else os.getenv("TELEGRAM_BOT_TOKEN")
 )
 
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
 CSRF_TRUSTED_ORIGINS = [
     "https://kiberonetgbot.online",
     "https://93.85.88.72",
@@ -49,6 +55,8 @@ INSTALLED_APPS = [
     "app_api",
     "app_kiberclub",
     "app_kibershop.apps.AppKibershopConfig",
+    
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -59,6 +67,10 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    
+    
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = "_web_service.urls"
