@@ -190,12 +190,6 @@ class SalesManager(models.Model):
     telegram_link = models.CharField(
         max_length=100, unique=True, blank=True, null=True, verbose_name="Телеграм ссылка"
     )
-    branches = models.ManyToManyField(
-        Branch,
-        related_name="sales_managers",
-        verbose_name="Филиалы",
-        blank=True,
-    )
 
     class Meta:
         db_table = "sales_managers"

@@ -413,3 +413,18 @@ def find_client_by_id(branch_id, crm_id):
             return None
     except Exception as e:
         return None
+
+
+def get_manager_from_crm(branch_id, page=0):
+    data = {"page": page}
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/user/index"
+    try:
+        response: dict = send_request_to_crm(url=url, data=data, params=None)
+        if response:
+            logger.info("Менеджеры получены")
+            return response
+        else:
+            logger.error(f"Менеджер не найден: {response}")
+            return None
+    except Exception as e:
+        return None

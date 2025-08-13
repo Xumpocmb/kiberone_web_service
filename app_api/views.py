@@ -582,21 +582,13 @@ def get_bonus_by_id_view(request, bonus_id: int) -> Response:
 
 
 @api_view(["GET"])
-def get_sales_managers_by_branch(request, branch_id: int):
+def get_sales_managers(request):
     """
     Получение списка менеджеров по продажам для указанного филиала.
     """
     try:
-        # Проверяем, существует ли филиал
-        branch = Branch.objects.filter(id=branch_id).first()
-        if not branch:
-            return Response(
-                {"success": False, "message": "Филиал не найден."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        # Получаем всех менеджеров, связанных с этим филиалом
-        managers = branch.sales_managers.all()  # Используем related_name из модели
+        
+        managers = SalesManager.objects.all()
         data = [
             {
                 "id": manager.id,
@@ -724,38 +716,41 @@ def get_location_by_id(request, location_id: int):
 
 
 @api_view(["GET"])
-def get_manager_by_room_id(request, room_id: int):
+def get_manager(request, user_crm_id, branch_id):
     """
-    Получение менеджера по room_id.
+    Получение менеджера.
     """
-    try:
-        location = Location.objects.filter(location_crm_id=room_id).first()
-        if not location:
+    client = find_client_by_id(user_crm_id, branch_id)
+    client_assigned_id = client.get("assigned_id")
+    
+    page = 0
+    while True:
+        managers = get_manager_from_crm(branch_id, page)
+        
+        managers_items = managers.get("items") if managers else None
+        if not managers_items:
             return Response(
-                {"success": False, "message": "Локация не найдена."},
+                {"success": False, "message": "Менеджеры не найдены."},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        manager = location.location_manager
-        if not manager:
-            return Response(
-                {"success": False, "message": "Менеджер для локации не найден."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        data = {
-            "id": manager.id,
-            "name": manager.name,
-            "telegram_link": manager.telegram_link,
-        }
-        return Response(
-            {"success": True, "data": data},
-            status=status.HTTP_200_OK,
-        )
-    except Exception as e:
-        return Response(
-            {"success": False, "message": f"Ошибка сервера: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        
+        for manager in managers_items:
+            if manager.get("id") == client_assigned_id:
+                return Response(
+                    {"success": True, "data": manager},
+                    status=status.HTTP_200_OK,
+                )
+        
+        # Проверяем, есть ли еще страницы
+        total_pages = managers.get("total_pages", 0)
+        if page >= total_pages - 1 or total_pages == 0:
+            break
+            
+        page += 1
+    
+    return Response(
+            {"success": False, "message": "Менеджер не найден."},
+            status=status.HTTP_404_NOT_FOUND,
         )
 
 

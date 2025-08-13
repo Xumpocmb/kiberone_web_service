@@ -136,13 +136,7 @@ class ClientBonusAdmin(admin.ModelAdmin):
 
 @admin.register(SalesManager)
 class SalesManagerAdmin(admin.ModelAdmin):
-    list_display = ("name", "telegram_link", "get_branches")
-    filter_horizontal = ("branches",)
-
-    def get_branches(self, obj):
-        return ", ".join([branch.name for branch in obj.branches.all()])
-
-    get_branches.short_description = "Филиалы"
+    list_display = ("name", "telegram_link")
 
 
 @admin.register(SocialLink)
