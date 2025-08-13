@@ -900,15 +900,27 @@ def get_user_tg_links(request) -> Response:
         for client in clients:
             user_groups_data: dict = get_user_groups_from_crm(client.branch_id, client.crm_id)
             if user_groups_data.get('total', 0) > 0:
-                group_ids = []
+                from datetime import datetime
+                current_date = datetime.now().date()
+                
                 for group_item in user_groups_data["items"]:
-                    group_ids.append(group_item["group_id"])
-
-                if group_ids:
-                    for group_id in group_ids:
-                        group_link_data = get_group_link_from_crm(client.branch_id, group_id)
-                        if group_link_data.get('total', 0) > 0:
-                            group_tg_link = group_link_data.get("items", [])[0].get("note", None)
+                    # Проверяем актуальность участия ученика в группе по дате окончания обучения
+                    e_date_str = group_item.get("e_date")
+                    if e_date_str:
+                        try:
+                            e_date = datetime.strptime(e_date_str, "%d.%m.%Y").date()
+                            # Если дата окончания обучения уже прошла, пропускаем эту группу
+                            if e_date < current_date:
+                                continue
+                        except (ValueError, TypeError):
+                            # Если не удалось преобразовать дату, считаем группу актуальной
+                            pass
+                    
+                    group_id = group_item["group_id"]
+                    group_link_data = get_group_link_from_crm(client.branch_id, group_id)
+                    if group_link_data.get('total', 0) > 0:
+                        group_tg_link = group_link_data.get("items", [])[0].get("note", None)
+                        if group_tg_link and group_tg_link not in group_tg_links:
                             group_tg_links.append(group_tg_link)
         return Response({"success": True, "data": group_tg_links}, status=status.HTTP_200_OK)
     except Exception as e:
