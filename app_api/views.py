@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from app_api.alfa_crm_service.crm_service import (
     find_user_by_phone,
     create_user_in_crm,
-    get_client_lessons, get_user_groups_from_crm, get_group_link_from_crm, find_client_by_id,
+    get_client_lessons, get_user_groups_from_crm, get_group_link_from_crm, find_client_by_id, get_manager_from_crm
 )
 from rest_framework import status
 from rest_framework.response import Response
@@ -584,10 +584,9 @@ def get_bonus_by_id_view(request, bonus_id: int) -> Response:
 @api_view(["GET"])
 def get_sales_managers(request):
     """
-    Получение списка менеджеров по продажам для указанного филиала.
+    Получение списка менеджеров
     """
     try:
-        
         managers = SalesManager.objects.all()
         data = [
             {
@@ -716,41 +715,51 @@ def get_location_by_id(request, location_id: int):
 
 
 @api_view(["GET"])
-def get_manager(request, user_crm_id, branch_id):
-    """
-    Получение менеджера.
-    """
-    client = find_client_by_id(user_crm_id, branch_id)
-    client_assigned_id = client.get("assigned_id")
-    
-    page = 0
-    while True:
-        managers = get_manager_from_crm(branch_id, page)
-        
-        managers_items = managers.get("items") if managers else None
-        if not managers_items:
-            return Response(
-                {"success": False, "message": "Менеджеры не найдены."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        
-        for manager in managers_items:
-            if manager.get("id") == client_assigned_id:
-                return Response(
-                    {"success": True, "data": manager},
-                    status=status.HTTP_200_OK,
-                )
-        
-        # Проверяем, есть ли еще страницы
-        total_pages = managers.get("total_pages", 0)
-        if page >= total_pages - 1 or total_pages == 0:
-            break
-            
-        page += 1
-    
-    return Response(
-            {"success": False, "message": "Менеджер не найден."},
+def get_manager(request, branch_id, user_crm_id):
+    """Получение менеджера"""
+    # 1. Находим клиента
+    client = find_client_by_id(branch_id, user_crm_id)
+    if not client:
+        return Response(
+            {"success": False, "message": "Клиент не найден."},
             status=status.HTTP_404_NOT_FOUND,
+        )
+
+    # 2. Проверяем назначенного менеджера
+    client_assigned_id = client.get("assigned_id")
+
+    if client_assigned_id:
+        # 3. Если есть назначенный менеджер - ищем его
+        MAX_PAGES = 20
+        curr_page = 0
+
+        while curr_page < MAX_PAGES:
+            managers = get_manager_from_crm(branch_id, page=curr_page)
+            if not managers:
+                break
+
+            managers_items = managers.get("items", [])
+            if not managers_items:
+                break
+
+            for manager in managers_items:
+                if manager.get("id") == client_assigned_id:
+                    return Response(
+                        {"success": True, "data": manager, "has_assigned": True, "is_study": client.get("is_study", False)},
+                        status=status.HTTP_200_OK,
+                    )
+
+            curr_page += 1
+        
+        # Если прошли все страницы и не нашли менеджера
+        return Response(
+            {"success": False, "message": "Менеджер с ID {} не найден.".format(client_assigned_id)},
+            status=status.HTTP_200_OK,
+        )
+    else:
+        return Response(
+            {"success": False, "message": "У клиента нет назначенного менеджера."},
+            status=status.HTTP_200_OK,
         )
 
 
@@ -802,7 +811,6 @@ def get_user_balances(request) -> Response:
             {"success": False, "message": f"Ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-
 
 
 @api_view(["POST"])
@@ -865,7 +873,6 @@ def get_client_payment_data(request) -> Response:
             {"success": False, "message": f"Ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-
 
 
 @api_view(["GET"])
@@ -968,4 +975,3 @@ def find_client_by_id_view(request) -> Response:
             {"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-

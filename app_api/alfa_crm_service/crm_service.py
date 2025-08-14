@@ -401,17 +401,37 @@ def get_group_link_from_crm(branch_id: int, group_id: int) -> dict | None:
 
 
 def find_client_by_id(branch_id, crm_id):
-    data = {"id": crm_id}
+    # Добавляем обязательные параметры фильтрации
+    data = {
+        "id": crm_id,
+        "is_study": 2,  # 1 - клиенты, 0 - лиды, 2 - все
+        "page": 0
+    }
+    
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer/index"
+    
     try:
-        response: dict = send_request_to_crm(url=url, data=data, params=None)
-        if response:
-            logger.info("Клиент найден")
-            return response
-        else:
-            logger.error(f"Клиент не найден: {response}")
+        response = send_request_to_crm(url=url, data=data, params=None)
+        
+        if not response:
+            logger.error("Пустой ответ от CRM")
             return None
+            
+        # Проверяем наличие items в ответе
+        clients = response.get("items", [])
+        
+        if not clients:
+            logger.error(f"Клиент с ID {crm_id} не найден")
+            return None
+            
+        if len(clients) > 1:
+            logger.warning(f"Найдено несколько клиентов с ID {crm_id}, возвращаем первого")
+            
+        logger.info(f"Клиент {crm_id} успешно найден")
+        return clients[0]
+        
     except Exception as e:
+        logger.error(f"Ошибка при поиске клиента: {e}")
         return None
 
 
