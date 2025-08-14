@@ -932,7 +932,7 @@ def get_user_tg_links(request) -> Response:
         )
 
 
-@api_view(["GET"])
+@api_view(["POST"])
 def find_client_by_id_view(request) -> Response:
     """
     Получение данных клиентов из CRM по Telegram ID пользователя.
