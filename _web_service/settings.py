@@ -34,6 +34,7 @@ CSRF_TRUSTED_ORIGINS = [
 ALLOWED_HOSTS = [
     "kiberonetgbot.online",
     "https://kiberonetgbot.online",
+    'www.kiberonetgbot.online',
     "93.85.88.72",
     "localhost",
     "127.0.0.1",
