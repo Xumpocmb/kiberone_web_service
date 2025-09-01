@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 import logging
 import gspread
+import re
 import requests
 from bs4 import BeautifulSoup
 from django.http import JsonResponse, HttpRequest, HttpResponse
@@ -11,6 +12,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from app_api.alfa_crm_service.crm_service import (
     get_client_lessons,
     get_client_lesson_name,
+    get_client_kiberons,
 )
 from app_kiberclub.models import AppUser, Client, Location
 from app_kibershop.models import ClientKiberons
@@ -174,40 +176,7 @@ def open_profile(request):
                         }
                     )
 
-                with open("kiberclub_credentials.json", "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    logger.debug(
-                        "Загружены учетные данные из файла kiberclub_credentials.json"
-                    )
-
-                user_crm_name_splitted = client.name.split(" ")[:2]
-                user_crm_name_full = " ".join(user_crm_name_splitted).strip()
-                logger.debug(f"Форматированное имя клиента: {user_crm_name_full}")
-
-                login, password, kiberons = None, None, None
-
-                if branch_id == 1:
-                    login = data["Минск"]["логин"]
-                    password = data["Минск"]["пароль"]
-                elif branch_id == 3:
-                    login = data["Борисов"]["логин"]
-                    password = data["Борисов"]["пароль"]
-                elif branch_id == 2:
-                    login = data["Барановичи"]["логин"]
-                    password = data["Барановичи"]["пароль"]
-                elif branch_id == 4:
-                    login = data["Новополоцк"]["логин"]
-                    password = data["Новополоцк"]["пароль"]
-
-                if login and password:
-                    kiberons = get_kiberons_count(
-                        client.crm_id, user_crm_name_full, login, password
-                    )
-                    logger.debug(f"Количество киберонов: {kiberons}")
-                else:
-                    logger.warning(
-                        f"Не удалось определить логин/пароль для branch_id={branch_id}"
-                    )
+                kiberons = get_client_kiberons(branch_id, client.crm_id)
 
                 context["client"].update(
                     {
@@ -400,93 +369,6 @@ def save_review_to_google_sheet(
 
     logger.warning(f"Ребенок с ID {child_id} не найден в таблице")
     return False
-
-
-def get_kiberons_count(
-    user_crm_id, user_crm_name_full: str, login: str, password: str
-) -> str | None:
-    cookies = {
-        "developsess": "e65294731ff311d892841471f7beec1e",
-    }
-    headers = {
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "accept-language": "ru,en-US;q=0.9,en;q=0.8",
-        "cache-control": "max-age=0",
-        "content-type": "application/x-www-form-urlencoded",
-        # 'cookie': 'developsess=e65294731ff311d892841471f7beec1e',
-        "origin": "https://kiber-one.club",
-        "priority": "u=0, i",
-        "referer": "https://kiber-one.club/",
-        "sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "document",
-        "sec-fetch-mode": "navigate",
-        "sec-fetch-site": "same-origin",
-        "sec-fetch-user": "?1",
-        "upgrade-insecure-requests": "1",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
-    }
-
-    data = {
-        "urltogo": "https://kiber-one.club/enter/",
-        "login": login,
-        "password": password,
-        "sendloginform": "Войти",
-    }
-    response = requests.post(
-        "https://kiber-one.club/enter/", cookies=cookies, headers=headers, data=data
-    )
-
-    if response.status_code != 200:
-        return None
-
-    cookies.update(response.cookies)
-    headers.update(response.headers)
-    users_url = "https://kiber-one.club/mycabinet/users/"
-
-    try:
-        response = requests.get(users_url, cookies=cookies, headers=headers)
-
-        if response.status_code != 200:
-            return None
-    except Exception as e:
-        return None
-
-    try:
-        soup = BeautifulSoup(response.text, "lxml")
-        if soup is None:
-            return None
-    except Exception as e:
-        return None
-
-    children_elements = soup.find_all("div", class_="user_item")
-    if not children_elements:
-        print("No children elements found")
-        return None
-
-    for child in children_elements:
-        name_element = child.find("div", class_="user_admin_col_name").find("a")
-        full_name = name_element.text.strip()
-        full_name_splitted = full_name.split(" ")[:2]
-        name = " ".join(full_name_splitted)
-        if name == " ".join(user_crm_name_full.split(" ")[:2]):
-            balance_element = child.find("div", class_="user_admin_col_balance")
-            balance = balance_element.text.strip()
-
-            user = Client.objects.filter(crm_id=user_crm_id).first()
-            if not user:
-                print("user not found")
-                return "0"
-            user_kiberons_in_db = ClientKiberons.objects.filter(client=user).first()
-            if user_kiberons_in_db:
-                user_kiberons_in_db.start_kiberons_count = balance
-                user_kiberons_in_db.save()
-            else:
-                ClientKiberons.objects.create(client=user, start_kiberons_count=balance)
-
-            return balance
-    return None
 
 
 def get_portfolio_link(client_name) -> str | None:

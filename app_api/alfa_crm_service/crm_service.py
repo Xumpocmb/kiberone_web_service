@@ -448,3 +448,73 @@ def get_manager_from_crm(branch_id, page=0):
             return None
     except Exception as e:
         return None
+
+
+
+def set_client_kiberons(branch_id, customer_id, kiberons_from_kiberclub):
+    try:
+        url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/bonus/bonus-add?customer_id={customer_id}"
+        data = {
+            "amount": kiberons_from_kiberclub 
+        }
+        response: dict = send_request_to_crm(url=url, data=data, params=None)
+
+        if response:
+            logger.info("Запрос для установки числа киберонов успешный")
+            return response
+        else:
+            logger.error(f"Запрос для установки числа киберонов не успешный: {response}")
+            return None
+    except Exception as e:
+        logger.error(f"Ошибка при установке Киберонов: {e}")
+        return None
+
+
+def get_client_kiberons(branch_id, customer_id):
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/bonus/balance-bonus?customer_id={customer_id}"
+    
+    response: dict = send_request_to_crm(url=url, data=None, params=None)
+    if response:
+        logger.info("Запрос для получения числа киберонов успешный")
+        if 'balance_bonus' in response:
+            return response['balance_bonus']
+        return 0
+    else:
+        logger.error(f"Запрос для получения числа киберонов не успешный: {response}")
+        return None
+
+
+
+def get_all_clients(branch_id):
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer/index"
+    
+    page = 0
+    count = 1
+    
+    while count > 0:
+        data = {
+            "is_study": 0,
+            "page": page
+        }
+        clients_response = send_request_to_crm(url=url, data=data, params=None)
+        
+        if not clients_response:
+            logger.error(f"Не удалось получить клиентов для филиала {branch_id}, страница {page}")
+            break
+            
+        if "items" in clients_response:
+            clients = clients_response["items"]
+            count = clients_response.get("count", 0)
+            logger.info(f"Получено {len(clients)} клиентов для филиала {branch_id}, страница {page}")
+            
+            # Возвращаем клиентов по одному через yield
+            for client in clients:
+                yield client
+                
+        else:
+            logger.error(f"Неверный формат ответа от CRM для филиала {branch_id}, страница {page}")
+            break
+            
+        page += 1
+    
+    logger.info(f"Завершено получение клиентов для филиала {branch_id}")
