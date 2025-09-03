@@ -108,7 +108,7 @@ def get_pay_url(crm_id, amount, name):
     url = EXPRESS_PAY_URL + "invoices?token=" + EXPRESS_PAY_TOKEN
     params = {
         "Token": EXPRESS_PAY_TOKEN,
-        "AccountNo": str(crm_id),
+        "AccountNo": "1-" + str(crm_id),
         "Amount": str(amount),
         "Currency": "933",
         "Surname": str(name),

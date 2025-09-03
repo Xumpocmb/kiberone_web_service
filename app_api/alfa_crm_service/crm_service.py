@@ -322,12 +322,12 @@ def get_tariff_price(branch_id, tariff_id):
     last_page = 1
     if tariff_objects.get("count") != 0:
         last_page = tariff_objects.get("total") // tariff_objects.get("count")
-    while page < last_page:
-        for tariff in tariff_objects_items:
-            if tariff.get("id") == tariff_id:
+    while page <= last_page:
+        for tariff in tariff_objects:
+            if tariff.get("id") == id:
                 return tariff.get("price")
         page += 1
-        data = {"page": 0}
+        data = {"page": page}
         tariff_objects = send_request_to_crm(url, data, None)
         tariff_objects_items = tariff_objects.get("items")
     return []
@@ -450,7 +450,6 @@ def get_manager_from_crm(branch_id, page=0):
         return None
 
 
-
 def set_client_kiberons(branch_id, customer_id, kiberons_from_kiberclub):
     try:
         url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/bonus/bonus-add?customer_id={customer_id}"
@@ -482,7 +481,6 @@ def get_client_kiberons(branch_id, customer_id):
     else:
         logger.error(f"Запрос для получения числа киберонов не успешный: {response}")
         return None
-
 
 
 def get_all_clients(branch_id):
