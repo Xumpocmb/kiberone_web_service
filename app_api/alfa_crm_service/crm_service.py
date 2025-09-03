@@ -300,10 +300,7 @@ def get_client_lessons(
 def get_curr_tariff(user_crm_id, branch_id, curr_date):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer-tariff/index?customer_id={user_crm_id}"
     customer_tariffs = send_request_to_crm(url, {}, None)
-    for tariff in sorted(
-        customer_tariffs.get("items"),
-        key=lambda x: datetime.strptime(x.get("e_date"), "%d.%m.%Y"),
-    ):
+    for tariff in sorted(customer_tariffs.get("items"), key=lambda x: datetime.strptime(x.get("e_date"), "%d.%m.%Y")):
         tariff_end_date = datetime.strptime(tariff.get("e_date"), "%d.%m.%Y")
         tariff_begin_date = datetime.strptime(tariff.get("b_date"), "%d.%m.%Y")
         if tariff_end_date.date() >= curr_date >= tariff_begin_date.date():
@@ -323,14 +320,13 @@ def get_tariff_price(branch_id, tariff_id):
     if tariff_objects.get("count") != 0:
         last_page = tariff_objects.get("total") // tariff_objects.get("count")
     while page <= last_page:
-        for tariff in tariff_objects:
-            if tariff.get("id") == id:
+        for tariff in tariff_objects_items:
+            if tariff.get("id") == tariff_id:
                 return tariff.get("price")
         page += 1
         data = {"page": page}
-        tariff_objects = send_request_to_crm(url, data, None)
-        tariff_objects_items = tariff_objects.get("items")
-    return []
+        tariff_objects_items = send_request_to_crm(url, data, None).get("items")
+    return 0
 
 
 def get_curr_discount(branch_id, user_crm_id, curr_date):
