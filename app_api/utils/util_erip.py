@@ -26,6 +26,7 @@ def set_pay(user_data):
     balance: float = float(user_data.get("balance"))
 
     amount_payable = get_paid_summ(user_data, balance, datetime.now().date())
+    clear_user_not_paid_invoices('1-' + user_data.get("id"))
 
     pay_url = (get_pay_url(user_data.get("crm_id"), round(amount_payable + 0.001, 2), user_data.get("name")))
 
