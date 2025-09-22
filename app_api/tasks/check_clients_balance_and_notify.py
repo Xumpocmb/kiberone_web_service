@@ -1,11 +1,13 @@
+from email import message
 import requests
 from celery import shared_task
 from django.conf import settings
 
-from app_kiberclub.models import Client, AppUser
+from app_kiberclub.models import Client, AppUser, Location
 from django.utils import timezone
 import logging
 from datetime import date
+from app_api.alfa_crm_service.crm_service import get_client_lessons
 
 
 logger = logging.getLogger(__name__)
@@ -45,14 +47,14 @@ def send_birthday_congratulations():
         dob__day=today.day,
         dob__month=today.month
     )
-
+    
     for client in clients:
         user: AppUser = client.user
         if not user or not user.telegram_id:
             continue
 
         message = (
-            f"🎂 Поздравляем с Днем Рождения, {client.first_name}! 🎉\n\n"
+            f"🎂 Поздравляем с Днем Рождения, {client.name}! 🎉\n\n"
             f"Команда KIBERone желает тебе успехов в учебе, новых открытий и достижений!\n\n"
             f"Пусть этот день будет наполнен радостью и счастьем!\n\n"
             f"Твой KIBERone! ❤️"
@@ -104,3 +106,89 @@ def check_clients_balance_and_notify():
             logger.info(f"Уведомление отправлено пользователю {user.telegram_id}")
         except Exception as e:
             logger.error(f"Ошибка при отправке сообщения пользователю {user.telegram_id}: {e}")
+
+
+@shared_task
+def check_clients_lessons_before():
+    """
+    Проверяет клиентов и отправляет уведомления тем, у кого пробные занятия завтра
+    """
+    
+    # Получаем клиентов с количеством оплаченных занятий меньше 1
+    clients = Client.objects.select_related("user").filter(paid_lesson_count__lt=1)
+
+    for client in clients:
+        
+        # Запрос пробных занятий
+        lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=3)
+        
+        total_trial_lessons = lesson_response.get("total", 0)
+        
+        if total_trial_lessons > 0:
+            trial_lesson = lesson_response.get("items", [])[0]
+            lesson_date = trial_lesson.get("date", None)
+            lesson_time = f"{trial_lesson.get('time_from').split(' ')[1][:-3]}"
+            room_id = trial_lesson.get("room_id", None)
+            
+            
+            # Поиск локации
+            location = Location.objects.filter(location_crm_id=room_id).first()
+            
+            if location:
+                message = (
+                    f"🔔 Ваше пробное занятие в КИБЕР-школе уже завтра!\n"
+                    f"Дата: {lesson_date.split('-')[2]}.{lesson_date.split('-')[1]}\n"
+                    f"Время: {lesson_time}\n"
+                    f"Адрес: {location.name}\n{location.map_url}\n\n"
+                    "Ваш KIBERone ♥"
+                )
+                try:
+                    send_telegram_message(client.user.telegram_id, message)
+                except Exception as e:
+                    continue
+        
+        # НАПОМИНАНИЕ О ПЕРВОМ ЗАНЯТИИ
+        
+        # запланированные уроки
+        lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=2)
+        
+        planned_lessons_count = lesson_response.get("total", 0)
+        
+        if planned_lessons_count > 0:
+            # проведенные уроки
+            user_taught_lessons = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=3, lesson_type=2)
+            # если нет посещенных уроков
+            taught_lessons_count = user_taught_lessons.get("total", 0)
+            
+            if taught_lessons_count == 0:
+                # забираем последний запланированный урок
+                if lesson_response.get('total', 0) > lesson_response.get('count', 0):
+                    page = lesson_response.get('total', 0) // lesson_response.get('count', 1)
+                else:
+                    page = 0
+                lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=2, page=page)
+                
+                last_user_lesson = lesson_response.get("items", [])[-1]
+                
+                next_lesson_date = last_user_lesson.get("lesson_date") if last_user_lesson.get("lesson_date") else last_user_lesson.get("date")
+                
+                room_id = last_user_lesson.get("room_id", None)
+                location = Location.objects.filter(location_crm_id=room_id).first()
+                
+                
+                # проверить что урок завтра
+                tomorrow_date = (timezone.now() + timezone.timedelta(days=1)).strftime("%Y-%m-%d")
+                
+                if next_lesson_date == tomorrow_date:
+                    message = (
+                        f"🔔 Ваше первое занятие в КИБЕР-школе уже завтра!\n"
+                        f"Дата: {next_lesson_date.split('-')[2]}.{next_lesson_date.split('-')[1]}\n"
+                        f"Время: {last_user_lesson.get('time_from').split(' ')[1][:-3]}\n"
+                        f"Адрес: {location.name}\n{location.map_url}\n\n"
+                        "Ваш KIBERone ♥"
+                    )
+                    
+                    try:
+                        send_telegram_message(client.user.telegram_id, message)
+                    except Exception as e:
+                        continue

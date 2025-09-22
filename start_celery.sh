@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# Перейти в корень проекта
-cd /home/x93/x-code/kiberone_web_service || { echo "❌ Не удалось перейти в директорию проекта"; exit 1; }
+# Определяем директорию, в которой находится скрипт
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+# Перейти в корень проекта (директория скрипта)
+cd "$SCRIPT_DIR" || { echo "❌ Не удалось перейти в директорию проекта: $SCRIPT_DIR"; exit 1; }
+echo "✅ Рабочая директория: $(pwd)"
 
 # Проверяем, существует ли celery_app.py
 if [ ! -f "celery_app.py" ]; then
@@ -10,13 +14,13 @@ if [ ! -f "celery_app.py" ]; then
 fi
 
 # Проверяем, существует ли виртуальное окружение
-if [ ! -d ".venv" ]; then
+if [ ! -d "venv" ]; then
     echo "❌ Виртуальное окружение 'venv' не найдено"
     exit 1
 fi
 
 # Активировать виртуальное окружение
-source .venv/bin/activate || { echo "❌ Не удалось активировать виртуальное окружение"; exit 1; }
+source venv/bin/activate || { echo "❌ Не удалось активировать виртуальное окружение"; exit 1; }
 
 # Создать папку для логов (если её нет)
 mkdir -p logs

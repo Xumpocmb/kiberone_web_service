@@ -353,9 +353,7 @@ def get_curr_discount(branch_id, user_crm_id, curr_date):
     return 0
 
 
-def get_client_lesson_name(
-    branch_id: int, subject_id: int | None = None
-) -> dict | None:
+def get_client_lesson_name(branch_id: int, subject_id: int | None = None) -> dict | None:
     data = {"id": subject_id, "active": True, "page": 0}
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/subject/index"
     response_data = send_request_to_crm(
