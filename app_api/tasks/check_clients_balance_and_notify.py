@@ -6,6 +6,7 @@ from django.conf import settings
 from app_kiberclub.models import Client, AppUser, Location
 from django.utils import timezone
 import logging
+import datetime
 from datetime import date
 from app_api.alfa_crm_service.crm_service import get_client_lessons
 
@@ -84,28 +85,40 @@ def check_clients_balance_and_notify():
         user: AppUser = client.user
         if not user or not user.telegram_id:
             continue
-
-        message = (
-            f"🔔 Это PUSH уведомление о необходимости пополнить KIBERказну\n\n"
-            "Чтобы оплатить обучение KIBERone, нажмите на боковую кнопку Меню->КИБЕРменю->Оплатить\n\n"
-            "Ваш KIBERone!\n"
-        )
         
-        reminder_message = (
-            "Уважаемый клиент!\n"
-            "У нас не отобразилась ваша оплата за занятия.\n"
-            "Чтобы оплатить обучение KIBERone, нажмите на боковую кнопку Меню->КИБЕРменю->Оплатить\n\n"
-            "Ваш KIBERone!\n")
+        lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=2)
+        if lesson_response.get('total', 0) > lesson_response.get('count', 0):
+            page = lesson_response.get('total', 0) // lesson_response.get('count', 1)
+        else:
+            page = 0
+        lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=2, page=page)
+        last_user_lesson = lesson_response.get("items", [])[-1]
+        next_lesson_date = last_user_lesson.get("lesson_date") if last_user_lesson.get("lesson_date") else last_user_lesson.get("date")
+        
+        # если урок сегодня, то отправить уведомление
+        if timezone.now().strftime("%Y-%m-%d") == next_lesson_date:
+            message = (
+                f"🔔 Это PUSH уведомление о необходимости пополнить KIBERказну\n\n"
+                "Чтобы оплатить обучение KIBERone, нажмите на боковую кнопку Меню->КИБЕРменю->Оплатить\n\n"
+                "Ваш KIBERone!\n"
+            )
+            
+            reminder_message = (
+                "Уважаемый клиент!\n"
+                "У нас не отобразилась ваша оплата за занятия.\n"
+                "Чтобы оплатить обучение KIBERone, нажмите на боковую кнопку Меню->КИБЕРменю->Оплатить\n\n"
+                "Ваш KIBERone!\n")
 
-        # Выбираем сообщение в зависимости от текущей даты
-        current_day = now.day
-        notification_text = message if current_day <= 10 else reminder_message
+            # Выбираем сообщение в зависимости от текущей даты
+            current_day = now.day
+            notification_text = message if current_day <= 10 else reminder_message
 
-        try:
-            send_telegram_message(user.telegram_id, notification_text)
-            logger.info(f"Уведомление отправлено пользователю {user.telegram_id}")
-        except Exception as e:
-            logger.error(f"Ошибка при отправке сообщения пользователю {user.telegram_id}: {e}")
+            try:
+                send_telegram_message(user.telegram_id, notification_text)
+                logger.info(f"Уведомление отправлено пользователю {user.telegram_id}")
+            except Exception as e:
+                logger.error(f"Ошибка при отправке сообщения пользователю {user.telegram_id}: {e}")
+                continue
 
 
 @shared_task
