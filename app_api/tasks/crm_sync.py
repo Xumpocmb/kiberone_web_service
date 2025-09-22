@@ -26,18 +26,7 @@ def sync_all_users_with_crm():
                 logger.warning(f"Нет данных для клиента {client.crm_id} в CRM")
                 continue
 
-            if crm_response.get("total", 0) == 0:
-                logger.warning(f"Нет данных для клиента {client.crm_id} в CRM. Удаляю.")
-                client.delete()
-                continue
-
-            items = crm_response.get("items")
-            if not items or not isinstance(items, list):
-                logger.warning(f"CRM вернул некорректные данные для клиента {client.crm_id}")
-                continue
-
-            item = items[0]
-            update_client_from_crm(client, item)
+            update_client_from_crm(client, crm_response)
             update_bot_user_status(client.user)
 
         except Exception as e:
