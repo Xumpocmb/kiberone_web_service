@@ -23,7 +23,8 @@ def sync_all_users_with_crm():
             logger.info(crm_response)
 
             if not crm_response:
-                logger.warning(f"Нет данных для клиента {client.crm_id} в CRM")
+                logger.warning(f"Нет данных для клиента {client.crm_id} в CRM. Удаляю.")
+                client.delete()
                 continue
 
             update_client_from_crm(client, crm_response)
