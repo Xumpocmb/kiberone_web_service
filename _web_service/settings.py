@@ -15,31 +15,55 @@ TELEGRAM_BOT_TOKEN = (
     os.getenv("TELEGRAM_BOT_TOKEN_TEST") if DEBUG else os.getenv("TELEGRAM_BOT_TOKEN")
 )
 
-CORS_ALLOW_ALL_ORIGINS = DEBUG
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://kiberonetgbot.online",
-    "https://93.85.88.72",
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://kiberonetgbot.online",
-    "https://93.85.88.72",
-    "http://127.0.0.1",
-    "http://localhost",
-    "http://0.0.0.0",
-]
+# ======================
+# HOSTS & DOMAINS
+# ======================
+FRONTEND_DEV_URL = "http://localhost:3000"
+FRONTEND_PROD_URL = "https://kiberonetgbot.online"
 
 ALLOWED_HOSTS = [
     "kiberonetgbot.online",
-    "https://kiberonetgbot.online",
-    'www.kiberonetgbot.online',
+    "www.kiberonetgbot.online",
     "93.85.88.72",
     "localhost",
     "127.0.0.1",
-    "0.0.0.0",
 ]
+
+# ======================
+# CORS (для разработки и продакшена)
+# ======================
+
+CORS_ALLOW_CREDENTIALS = True
+
+if DEBUG:
+    # В разработке — разрешаем localhost:3000
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+else:
+    # В продакшене — только продакшен-фронтенд
+    CORS_ALLOWED_ORIGINS = [
+        "https://kiberonetgbot.online",
+    ]
+
+# ======================
+# CSRF
+# ======================
+CSRF_TRUSTED_ORIGINS = [
+    "https://kiberonetgbot.online",
+    "http://localhost",
+    "http://127.0.0.1",
+]
+
+# Безопасные cookies
+SESSION_COOKIE_SECURE = not DEBUG  # True в продакшене (HTTPS), False в dev
+CSRF_COOKIE_SECURE = not DEBUG
+
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+
+CSRF_COOKIE_HTTPONLY = True
 
 
 INSTALLED_APPS = [
@@ -121,6 +145,15 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 
 LANGUAGE_CODE = "ru-RU"

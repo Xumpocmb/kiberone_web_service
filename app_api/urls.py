@@ -18,7 +18,7 @@ from app_api.views import (
     get_partner_categories_view,
     get_partners_by_category_view,
     get_partner_by_id_view, get_manager, get_user_balances, get_client_payment_data, get_user_tg_links,
-    find_client_by_id_view
+    find_client_by_id_view,
 )
 
 app_name = "app_crm_api"

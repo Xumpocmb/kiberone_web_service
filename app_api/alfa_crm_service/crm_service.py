@@ -510,3 +510,39 @@ def get_all_clients(branch_id):
         page += 1
     
     logger.info(f"Завершено получение клиентов для филиала {branch_id}")
+
+
+def get_teacher(branch, phone_number):
+    url = f"https://kiberoneminsk.s20.online/v2api/{branch}/teacher/index"
+
+    data = {
+        "phone": phone_number
+    }
+
+    # teachers_res = requests.post(url, json=data, headers=headers).json()
+    response = send_request_to_crm(url=url, data=data, params=None)
+    return response
+
+
+def get_teacher_group(branch, teacher_id, teacher_name):
+    url = f"https://kiberoneminsk.s20.online/v2api/{branch}/group/index"
+
+    data = {
+        "teacher_id": teacher_id
+    }
+
+    groups_res = requests.post(url, json=data, headers=headers).json()
+    teacher_groups = []
+    for g in groups_res['items']:
+        if teacher_name in g['teacher_ids']:
+            teacher_groups.append(g)
+    return teacher_groups
+
+
+def get_clients_in_group(group_id, branch):
+    headers = auth()
+    url = f"https://kiberoneminsk.s20.online/v2api/{branch}/cgi/index?group_id={group_id}"
+
+    cgi_res = requests.post(url, headers=headers).json()
+    customer_ids = [customer_id['customer_id'] for customer_id in cgi_res['items']]
+    return customer_ids

@@ -39,4 +39,4 @@ class Resume(models.Model):
         ]
 
     def __str__(self):
-        return f"Резюме {self.student_name} (автор: {self.author.username})"
+        return f"Резюме ученика {self.student_crm_id} (автор: {self.author.username})"
