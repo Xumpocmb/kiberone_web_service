@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "app_api",
     "app_kiberclub",
     "app_kibershop.apps.AppKibershopConfig",
+    "app_clients_resumes",
     
     'corsheaders',
 ]

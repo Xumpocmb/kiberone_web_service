@@ -8,6 +8,7 @@ urlpatterns = [
     path("api/", include("app_api.urls")),
 
     path("kibershop/", include("app_kibershop.urls")),
+    path("resumes/", include("app_clients_resumes.urls")),
     path("", include("app_kiberclub.urls"))
 ]
 
