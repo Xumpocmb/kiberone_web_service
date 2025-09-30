@@ -7,6 +7,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from django.middleware.csrf import get_token
+from django.http import JsonResponse
+from .serializers import TutorRegistrationSerializer
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
