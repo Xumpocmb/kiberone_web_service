@@ -33,7 +33,7 @@ class LoginView(APIView):
                 - При ошибке: статус 400 с ошибками валидации
                 
         Example:
-            POST /api/login/
+            POST /api/tutor/login/
             {
                 "username": "user123",
                 "password": "password123"
@@ -68,7 +68,7 @@ class LogoutView(APIView):
             Response: JSON ответ с подтверждением выхода (статус 200)
             
         Example:
-            POST /api/logout/
+            POST /api/tutor/logout/
             {}
         """
         logout(request)
@@ -126,7 +126,7 @@ def csrf_token(request):
         JsonResponse: JSON объект с CSRF токеном
         
     Example:
-        GET /api/csrf-token/
+        GET /api/tutor/csrf/
         
         Response:
             {"csrfToken": "abc123def456..."}
