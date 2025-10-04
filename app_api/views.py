@@ -1020,9 +1020,10 @@ def telegram_callback_handler(request) -> Response:
     try:
         callback_query = request.data.get("callback_query")
         if not callback_query:
+            # Всегда возвращаем 200 для Telegram, чтобы он не повторял запрос
             return Response(
                 {"success": False, "message": "Отсутствует callback_query"},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_200_OK,
             )
 
         callback_data = callback_query.get("data")
@@ -1030,12 +1031,25 @@ def telegram_callback_handler(request) -> Response:
         chat_id = user.get("id")
 
         if not chat_id:
+            # Всегда возвращаем 200 для Telegram, чтобы он не повторял запрос
             return Response(
                 {"success": False, "message": "Отсутствует chat_id"},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_200_OK,
             )
 
         if callback_data == "get_gift":
+            # Проверяем, получал ли пользователь уже подарок
+            try:
+                app_user = AppUser.objects.filter(telegram_id=chat_id).first()
+                if app_user and app_user.gift_received:
+                    logger.info(f"Пользователь {chat_id} уже получал подарок")
+                    return Response(
+                        {"success": True, "message": "Подарок уже был отправлен ранее"},
+                        status=status.HTTP_200_OK,
+                    )
+            except Exception as e:
+                logger.warning(f"Не удалось проверить статус подарка для пользователя {chat_id}: {e}")
+
             # Путь к PDF файлу
             pdf_path = os.path.join(settings.BASE_DIR, "static", "files", "Roblox_animation_guide.pdf")
             
@@ -1043,7 +1057,7 @@ def telegram_callback_handler(request) -> Response:
                 logger.error(f"PDF файл не найден: {pdf_path}")
                 return Response(
                     {"success": False, "message": "Файл не найден"},
-                    status=status.HTTP_404_NOT_FOUND,
+                    status=status.HTTP_200_OK,  # Всегда 200 для Telegram
                 )
 
             # Отправляем PDF файл пользователю
@@ -1054,6 +1068,15 @@ def telegram_callback_handler(request) -> Response:
             )
 
             if result:
+                # Отмечаем, что пользователь получил подарок
+                try:
+                    if app_user:
+                        app_user.gift_received = True
+                        app_user.save()
+                        logger.info(f"Отметили получение подарка для пользователя {chat_id}")
+                except Exception as e:
+                    logger.warning(f"Не удалось отметить получение подарка для пользователя {chat_id}: {e}")
+
                 return Response(
                     {"success": True, "message": "Подарок отправлен"},
                     status=status.HTTP_200_OK,
@@ -1061,19 +1084,19 @@ def telegram_callback_handler(request) -> Response:
             else:
                 return Response(
                     {"success": False, "message": "Ошибка при отправке файла"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    status=status.HTTP_200_OK,  # Всегда 200 для Telegram
                 )
         else:
             return Response(
                 {"success": False, "message": f"Неизвестный callback_data: {callback_data}"},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_200_OK,  # Всегда 200 для Telegram
             )
 
     except Exception as e:
         logger.exception(f"Ошибка при обработке callback: {e}")
         return Response(
             {"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status=status.HTTP_200_OK,  # Всегда 200 для Telegram, чтобы он не повторял запрос
         )
 
 
