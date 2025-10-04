@@ -347,7 +347,7 @@ def check_attend_on_lesson(lessons):
         date_str = lesson.get("date")
         if not date_str:
             continue
-        if date_str == str(datetime.now().date() - timedelta(1)) and is_attend:
+        if date_str == str(datetime.datetime.now().date() - timedelta(1)) and is_attend:
             return True
 
     return False
