@@ -15,6 +15,7 @@ from rest_framework.response import Response
 
 from app_api.utils.util_erip import set_pay
 from app_api.utils.util_parse_date import parse_date
+from app_api.utils.user_status_utils import update_bot_user_status
 from app_api.tasks.check_clients_balance_and_notify import send_telegram_document
 from app_kiberclub.models import AppUser, Client, Branch, ClientBonus, EripPaymentHelp, Location, PartnerCategory, PartnerClientBonus, QuestionsAnswers, SalesManager, SocialLink
 
