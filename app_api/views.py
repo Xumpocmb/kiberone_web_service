@@ -1,6 +1,8 @@
 from django.db.models import QuerySet
 from django.shortcuts import render
 import logging
+import os
+from django.conf import settings
 
 from rest_framework.decorators import api_view
 from app_api.alfa_crm_service.crm_service import (
@@ -13,6 +15,7 @@ from rest_framework.response import Response
 
 from app_api.utils.util_erip import set_pay
 from app_api.utils.util_parse_date import parse_date
+from app_api.tasks.check_clients_balance_and_notify import send_telegram_document
 from app_kiberclub.models import AppUser, Client, Branch, ClientBonus, EripPaymentHelp, Location, PartnerCategory, PartnerClientBonus, QuestionsAnswers, SalesManager, SocialLink
 
 logger = logging.getLogger(__name__)
@@ -1027,6 +1030,76 @@ def find_client_by_id_view(request) -> Response:
         return Response(
             {"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+
+
+
+
+
+@api_view(["POST"])
+def telegram_callback_handler(request) -> Response:
+    """
+    Обработчик callback-запросов от Telegram бота.
+    """
+    try:
+        callback_query = request.data.get("callback_query")
+        if not callback_query:
+            return Response(
+                {"success": False, "message": "Отсутствует callback_query"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        callback_data = callback_query.get("data")
+        user = callback_query.get("from", {})
+        chat_id = user.get("id")
+
+        if not chat_id:
+            return Response(
+                {"success": False, "message": "Отсутствует chat_id"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if callback_data == "get_gift":
+            # Путь к PDF файлу
+            pdf_path = os.path.join(settings.BASE_DIR, "static", "files", "Roblox_animation_guide.pdf")
+            
+            if not os.path.exists(pdf_path):
+                logger.error(f"PDF файл не найден: {pdf_path}")
+                return Response(
+                    {"success": False, "message": "Файл не найден"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            # Отправляем PDF файл пользователю
+            result = send_telegram_document(
+                chat_id=chat_id,
+                file_path=pdf_path,
+                caption="🎁 Ваш подарок - руководство по анимации в Roblox!"
+            )
+
+            if result:
+                return Response(
+                    {"success": True, "message": "Подарок отправлен"},
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {"success": False, "message": "Ошибка при отправке файла"},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
+        else:
+            return Response(
+                {"success": False, "message": f"Неизвестный callback_data: {callback_data}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    except Exception as e:
+        logger.exception(f"Ошибка при обработке callback: {e}")
+        return Response(
+            {"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
