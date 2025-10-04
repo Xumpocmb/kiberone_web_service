@@ -2,7 +2,7 @@ import logging
 
 from app_api.alfa_crm_service.crm_service import find_client_by_id
 from app_api.utils.util_parse_date import parse_date
-from app_api.views import update_bot_user_status
+from app_api.utils.user_status_utils import update_bot_user_status
 from app_kiberclub.models import Client
 from celery import shared_task
 

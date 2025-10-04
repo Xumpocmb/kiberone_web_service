@@ -297,6 +297,21 @@ def get_client_lessons(
         return {"total": 0}
 
 
+def get_taught_trial_lesson(customer_id, branch_id):
+    url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/lesson/index"
+
+    data = {
+        "customer_id": customer_id,
+        "status": 3,  # 1 - запланирован урок, 2 - отменен, 3 - проведен
+        "lesson_type_id": 3  # 3 - пробник, 2 - групповой
+    }
+
+    # lessons = requests.post(url, json=data, headers=headers)
+    lessons_response = send_request_to_crm(url=url, data=data, params=None)
+
+    return lessons_response
+
+
 def get_curr_tariff(user_crm_id, branch_id, curr_date):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/customer-tariff/index?customer_id={user_crm_id}"
     customer_tariffs = send_request_to_crm(url, {}, None)
