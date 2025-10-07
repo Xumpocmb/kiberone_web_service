@@ -25,15 +25,14 @@ admin.site.register(User, UserAdmin)
 # Регистрируем TutorProfile отдельно для удобства
 @admin.register(TutorProfile)
 class TutorProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'tutor_name', 'tutor_crm_id', 'tutor_branch_id')
+    list_display = ('user', 'tutor_name', 'tutor_crm_id')
     search_fields = ('user__username', 'tutor_name', 'tutor_crm_id')
-    list_filter = ('tutor_branch_id',)
     fieldsets = (
         ('Пользователь', {
             'fields': ('user',)
         }),
         ('Информация о тьюторе', {
-            'fields': ('tutor_name', 'tutor_crm_id', 'tutor_branch_id')
+            'fields': ('tutor_name', 'tutor_crm_id')
         }),
     )
 

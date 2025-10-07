@@ -530,11 +530,7 @@ def get_all_clients(branch_id):
 def get_teacher(branch, phone_number):
     url = f"https://kiberoneminsk.s20.online/v2api/{branch}/teacher/index"
 
-    data = {
-        "phone": phone_number
-    }
-
-    # teachers_res = requests.post(url, json=data, headers=headers).json()
+    data = {"phone": phone_number}
     response = send_request_to_crm(url=url, data=data, params=None)
     return response
 
@@ -561,3 +557,4 @@ def get_clients_in_group(group_id, branch):
     cgi_res = requests.post(url, headers=headers).json()
     customer_ids = [customer_id['customer_id'] for customer_id in cgi_res['items']]
     return customer_ids
+

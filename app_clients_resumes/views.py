@@ -98,12 +98,15 @@ class TutorRegisterView(APIView):
         Example:
             POST /api/tutor/register/
             {
-                "username": "tutor123",
+                "username": "tutor_phone_number",
                 "password": "password123",
-                "email": "tutor@example.com",
-                "first_name": "Иван",
-                "last_name": "Петров"
+                "tutor_branch": 1
             }
+            
+        Note:
+            - username используется как номер телефона для поиска в CRM
+            - tutor_crm_id автоматически получается из CRM API
+            - роль и группа "Tutor" назначаются по умолчанию
         """
         serializer = TutorRegistrationSerializer(data=request.data)
         if serializer.is_valid():

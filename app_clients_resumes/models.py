@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from app_kiberclub.models import Branch
 
 
 class TutorProfile(models.Model):
@@ -12,7 +13,13 @@ class TutorProfile(models.Model):
         verbose_name="CRM ID тьютора"
     )
     tutor_name = models.CharField("Имя тьютора", max_length=200, blank=True, null=True)
-    tutor_branch_id = models.CharField("ID филиала", max_length=10, blank=True, null=True)
+    branch = models.ForeignKey(
+        Branch,
+        on_delete=models.CASCADE,
+        verbose_name="Филиал",
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return f"Профиль тьютора: {self.user.username}"
