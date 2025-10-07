@@ -82,17 +82,19 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # 3rd party
+    # DRF
     "rest_framework",
-    # 'rest_framework.authtoken',
+    # Swagger
+    "drf_yasg",
+    # Celery
     "django_celery_results",
     "django_celery_beat",
-    # user apps
+    # Apps
     "app_api",
     "app_kiberclub",
     "app_kibershop.apps.AppKibershopConfig",
     "app_clients_resumes",
-    
+    # CORS
     'corsheaders',
 ]
 

@@ -2,12 +2,15 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.middleware.csrf import get_token
 from django.http import JsonResponse
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from .serializers import TutorRegistrationSerializer
 from .models import TutorProfile, Resume
 from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group
@@ -22,6 +25,38 @@ class LoginView(APIView):
     """
     permission_classes = []
 
+    @swagger_auto_schema(
+        operation_description="Аутентификация пользователя в системе",
+        operation_summary="Вход в систему",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['username', 'password'],
+            properties={
+                'username': openapi.Schema(type=openapi.TYPE_STRING, description='Имя пользователя'),
+                'password': openapi.Schema(type=openapi.TYPE_STRING, description='Пароль'),
+            },
+        ),
+        responses={
+            200: openapi.Response(
+                description="Успешная аутентификация",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Сообщение об успехе'),
+                        'user': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID пользователя'),
+                                'username': openapi.Schema(type=openapi.TYPE_STRING, description='Имя пользователя'),
+                            }
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(description="Ошибка валидации данных")
+        },
+        tags=['Аутентификация']
+    )
     def post(self, request):
         """
         Обрабатывает POST запрос для входа пользователя в систему.
@@ -52,13 +87,32 @@ class LoginView(APIView):
         return Response(form.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class LogoutView(APIView):
     """
     API endpoint для выхода пользователя из системы.
     
     Обеспечивает безопасное завершение сессии пользователя.
     """
+    permission_classes = [IsAuthenticated]
     
+    @swagger_auto_schema(
+        operation_description="Выход пользователя из системы",
+        operation_summary="Выход из системы",
+        responses={
+            200: openapi.Response(
+                description="Успешный выход",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Сообщение об успешном выходе'),
+                    }
+                )
+            ),
+            401: openapi.Response(description="Пользователь не аутентифицирован")
+        },
+        tags=['Аутентификация']
+    )
     def post(self, request):
         """
         Обрабатывает POST запрос для выхода пользователя из системы.
@@ -85,6 +139,24 @@ class TutorRegisterView(APIView):
     """
     permission_classes = [AllowAny]
 
+    @swagger_auto_schema(
+        operation_description="Регистрация нового тьютора в системе",
+        operation_summary="Регистрация тьютора",
+        request_body=TutorRegistrationSerializer,
+        responses={
+            201: openapi.Response(
+                description="Успешная регистрация",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Сообщение об успешной регистрации'),
+                    }
+                )
+            ),
+            400: openapi.Response(description="Ошибка валидации данных")
+        },
+        tags=['Регистрация']
+    )
     def post(self, request):
         """
         Обрабатывает POST запрос для регистрации нового тьютора.
@@ -100,15 +172,13 @@ class TutorRegisterView(APIView):
         Example:
             POST /api/tutor/register/
             {
-                "username": "tutor_phone_number",
+                "username": "tutor123",
                 "password": "password123",
+                "email": "tutor@example.com",
+                "first_name": "Иван",
+                "last_name": "Иванов",
                 "tutor_branch": 1
             }
-            
-        Note:
-            - username используется как номер телефона для поиска в CRM
-            - tutor_crm_id автоматически получается из CRM API
-            - роль и группа "Tutor" назначаются по умолчанию
         """
         serializer = TutorRegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -128,6 +198,40 @@ class TutorGroupsView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Получение списка групп авторизованного тьютора",
+        operation_summary="Список групп тьютора",
+        responses={
+            200: openapi.Response(
+                description="Успешное получение списка групп",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                        'groups': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID группы'),
+                                    'name': openapi.Schema(type=openapi.TYPE_STRING, description='Название группы'),
+                                    'teacher_ids': openapi.Schema(
+                                        type=openapi.TYPE_ARRAY,
+                                        items=openapi.Schema(type=openapi.TYPE_STRING),
+                                        description='Список ID преподавателей'
+                                    )
+                                }
+                            )
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(description="Профиль тьютора не настроен"),
+            404: openapi.Response(description="Профиль тьютора не найден"),
+            500: openapi.Response(description="Внутренняя ошибка сервера")
+        },
+        tags=['Группы']
+    )
     def get(self, request):
         """
         Обрабатывает GET запрос для получения групп тьютора.
@@ -196,6 +300,50 @@ class GroupClientsView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Получение списка участников группы по ID группы",
+        operation_summary="Список участников группы",
+        manual_parameters=[
+            openapi.Parameter(
+                'group_id',
+                openapi.IN_QUERY,
+                description="ID группы для получения участников",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+            openapi.Parameter(
+                'branch',
+                openapi.IN_QUERY,
+                description="ID филиала",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description="Успешное получение списка участников",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                        'clients': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID клиента'),
+                                    'name': openapi.Schema(type=openapi.TYPE_STRING, description='Имя клиента')
+                                }
+                            )
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(description="Отсутствуют обязательные параметры"),
+            500: openapi.Response(description="Ошибка при получении данных из CRM")
+        },
+        tags=['Группы']
+    )
     def get(self, request):
         """
         Получает список участников группы по group_id.
@@ -210,15 +358,15 @@ class GroupClientsView(APIView):
             GET /api/tutor/group-clients/?group_id=123&branch=2
             
             Response:
-                {
-                    "success": true,
-                    "clients": [
-                        {
-                            "customer_id": 6881,
-                            "client_name": "Таранов Марк Алексеевич"
-                        }
-                    ]
-                }
+            {
+                "success": true,
+                "clients": [
+                    {
+                        "id": 456,
+                        "name": "Иван Иванов"
+                    }
+                ]
+            }
         """
         try:
             group_id = request.GET.get('group_id')
@@ -257,70 +405,52 @@ class ClientResumesView(APIView):
     
     Возвращает все резюме для указанного клиента (по student_crm_id).
     Требует аутентификации пользователя.
-    
-    Authentication:
-        - Требует активную сессию пользователя (session cookies)
-        - Необходим CSRF токен в заголовке X-CSRFToken
-        - При отсутствии аутентификации возвращает 403 Forbidden
-    
-    Methods:
-        GET: Получить список резюме клиента
-        
-    Query Parameters:
-        student_crm_id (str, required): ID ученика в CRM системе
-        
-    Returns:
-        Response: JSON ответ со списком резюме
-        
-        Success (200 OK):
-            {
-                "success": true,
-                "resumes": [
-                    {
-                        "id": 1,
-                        "student_crm_id": "12345",
-                        "content": "Содержание резюме...",
-                        "is_verified": true,
-                        "created_at": "2024-01-15T10:30:00Z",
-                        "updated_at": "2024-01-16T14:20:00Z",
-                        "author": "tutor_username"
-                    }
-                ]
-            }
-            
-        Empty result (200 OK):
-            {
-                "success": true,
-                "resumes": []
-            }
-            
-        Missing parameter (400 Bad Request):
-            {
-                "success": false,
-                "message": "Параметр student_crm_id обязателен"
-            }
-            
-        Authentication error (403 Forbidden):
-            {
-                "detail": "Учетные данные не были предоставлены."
-            }
-            
-        Server error (500 Internal Server Error):
-            {
-                "success": false,
-                "message": "Ошибка при получении резюме: <error_details>"
-            }
-            
-    Examples:
-        GET /api/tutor/client-resumes/?student_crm_id=12345
-        
-        curl -X GET "http://localhost:8000/api/tutor/client-resumes/?student_crm_id=12345" \
-             -H "Cookie: sessionid=<session_id>; csrftoken=<csrf_token>" \
-             -H "X-CSRFToken: <csrf_token>" \
-             -H "Content-Type: application/json"
     """
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Получение списка резюме клиента по ID ученика в CRM",
+        operation_summary="Список резюме клиента",
+        manual_parameters=[
+            openapi.Parameter(
+                'student_crm_id',
+                openapi.IN_QUERY,
+                description="ID ученика в CRM системе",
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description="Успешное получение списка резюме",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                        'resumes': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID резюме'),
+                                    'student_crm_id': openapi.Schema(type=openapi.TYPE_STRING, description='ID ученика в CRM'),
+                                    'content': openapi.Schema(type=openapi.TYPE_STRING, description='Содержание резюме'),
+                                    'is_verified': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус верификации'),
+                                    'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата создания'),
+                                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата обновления'),
+                                    'author': openapi.Schema(type=openapi.TYPE_STRING, description='Автор резюме')
+                                }
+                            )
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(description="Отсутствует обязательный параметр student_crm_id"),
+            403: openapi.Response(description="Пользователь не аутентифицирован"),
+            500: openapi.Response(description="Ошибка при получении резюме")
+        },
+        tags=['Резюме']
+    )
     def get(self, request):
         """
         Обрабатывает GET запрос для получения списка резюме клиента.
@@ -368,48 +498,51 @@ class ClientResumesView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class ResumeUpdateView(APIView):
     """
-    API endpoint для сохранения/изменения резюме по его ID.
+    API endpoint для обновления содержимого резюме.
     
-    Позволяет обновлять содержание резюме.
-    Требует аутентификации пользователя.
-    
-    Methods:
-        POST: Обновить резюме по ID
-        
-    URL Parameters:
-        resume_id (int): ID резюме для обновления
-        
-    Request Body:
-        {
-            "content": "Новое содержание резюме"
-        }
-        
-    Returns:
-        Response: JSON ответ с результатом операции:
-            {
-                "success": true,
-                "message": "Резюме успешно обновлено",
-                "resume": {
-                    "id": 1,
-                    "student_crm_id": "12345",
-                    "content": "Обновленное содержание резюме",
-                    "is_verified": false,
-                    "created_at": "2024-01-15T10:30:00Z",
-                    "updated_at": "2024-01-16T14:20:00Z",
-                    "author": "tutor_username"
-                }
-            }
-            
-    Example:
-        POST /api/tutor/resume/1/
-        {
-            "content": "Новое содержание резюме"
-        }
+    Позволяет обновлять текст резюме по его ID. Требует аутентификации и CSRF токена.
     """
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Обновление содержимого резюме по ID",
+        operation_summary="Обновление резюме",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['content'],
+            properties={
+                'content': openapi.Schema(type=openapi.TYPE_STRING, description='Новое содержание резюме'),
+            },
+        ),
+        responses={
+            200: openapi.Response(
+                description="Успешное обновление резюме",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Сообщение об успехе'),
+                        'resume': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID резюме'),
+                                'content': openapi.Schema(type=openapi.TYPE_STRING, description='Обновленное содержание'),
+                                'updated_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата обновления')
+                            }
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(description="Отсутствует обязательное поле content"),
+            403: openapi.Response(description="Пользователь не аутентифицирован"),
+            404: openapi.Response(description="Резюме не найдено"),
+            500: openapi.Response(description="Ошибка при обновлении резюме")
+        },
+        tags=['Резюме']
+    )
     def post(self, request, resume_id):
         """
         Обрабатывает POST запрос для обновления резюме.
@@ -478,41 +611,51 @@ class ResumeUpdateView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
 class ResumeVerifyView(APIView):
     """
-    API endpoint для отметки резюме как проверенного.
+    API endpoint для верификации резюме.
     
-    Позволяет отмечать резюме как проверенное (is_verified = True).
-    Доступен только пользователям из группы Senior Tutor.
-    Требует аутентификации пользователя.
-    
-    Methods:
-        POST: Отметить резюме как проверенное
-        
-    URL Parameters:
-        resume_id (int): ID резюме для верификации
-        
-    Returns:
-        Response: JSON ответ с результатом операции:
-            {
-                "success": true,
-                "message": "Резюме отмечено как проверенное",
-                "resume": {
-                    "id": 1,
-                    "student_crm_id": "12345",
-                    "content": "Содержание резюме...",
-                    "is_verified": true,
-                    "created_at": "2024-01-15T10:30:00Z",
-                    "updated_at": "2024-01-16T14:20:00Z",
-                    "author": "tutor_username"
-                }
-            }
-            
-    Example:
-        POST /api/tutor/resume/1/verify/
+    Позволяет изменять статус верификации резюме. Требует аутентификации и CSRF токена.
     """
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Изменение статуса верификации резюме",
+        operation_summary="Верификация резюме",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['is_verified'],
+            properties={
+                'is_verified': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Новый статус верификации'),
+            },
+        ),
+        responses={
+            200: openapi.Response(
+                description="Успешное изменение статуса верификации",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Сообщение об успехе'),
+                        'resume': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID резюме'),
+                                'is_verified': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус верификации'),
+                                'updated_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата обновления')
+                            }
+                        )
+                    }
+                )
+            ),
+            400: openapi.Response(description="Отсутствует обязательное поле is_verified"),
+            403: openapi.Response(description="Пользователь не аутентифицирован"),
+            404: openapi.Response(description="Резюме не найдено"),
+            500: openapi.Response(description="Ошибка при изменении статуса верификации")
+        },
+        tags=['Резюме']
+    )
     def post(self, request, resume_id):
         """
         Обрабатывает POST запрос для отметки резюме как проверенного.
@@ -576,6 +719,23 @@ class ResumeVerifyView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@api_view(['GET'])
+@swagger_auto_schema(
+    operation_description="Получение CSRF токена для защиты от CSRF атак",
+    operation_summary="Получение CSRF токена",
+    responses={
+        200: openapi.Response(
+            description="Успешное получение CSRF токена",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    'csrfToken': openapi.Schema(type=openapi.TYPE_STRING, description='CSRF токен'),
+                }
+            )
+        )
+    },
+    tags=['Безопасность']
+)
 def csrf_token(request):
     """
     Генерирует и возвращает CSRF токен для клиентских приложений.
