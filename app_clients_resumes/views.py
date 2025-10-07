@@ -10,7 +10,7 @@ from django.middleware.csrf import get_token
 from django.http import JsonResponse
 from .serializers import TutorRegistrationSerializer
 from .models import TutorProfile
-from app_api.alfa_crm_service.crm_service import get_teacher_group
+from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -185,6 +185,69 @@ class TutorGroupsView(APIView):
             return Response({
                 "success": False,
                 "message": f"Ошибка при получении групп: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class GroupClientsView(APIView):
+    """
+    API endpoint для получения списка участников группы.
+    
+    Требует авторизации. Возвращает список клиентов в указанной группе с их ID и именами.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Получает список участников группы по group_id.
+        
+        Args:
+            request: HTTP запрос с параметрами group_id и branch
+            
+        Returns:
+            Response: JSON объект со списком участников группы
+            
+        Example:
+            GET /api/tutor/group-clients/?group_id=123&branch=2
+            
+            Response:
+                {
+                    "success": true,
+                    "clients": [
+                        {
+                            "customer_id": 6881,
+                            "client_name": "Таранов Марк Алексеевич"
+                        }
+                    ]
+                }
+        """
+        try:
+            group_id = request.GET.get('group_id')
+            branch = request.GET.get('branch')
+            
+            if not group_id:
+                return Response({
+                    "success": False,
+                    "message": "Параметр group_id обязателен"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not branch:
+                return Response({
+                    "success": False,
+                    "message": "Параметр branch обязателен"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Получаем список участников группы из CRM
+            clients = get_clients_in_group(group_id=group_id, branch=branch)
+            
+            return Response({
+                "success": True,
+                "clients": clients
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                "success": False,
+                "message": f"Ошибка при получении участников группы: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 

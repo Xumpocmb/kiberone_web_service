@@ -557,7 +557,18 @@ def get_clients_in_group(group_id, branch):
     url = f"https://kiberoneminsk.s20.online/v2api/{branch}/cgi/index?group_id={group_id}"
 
     cgi_res = send_request_to_crm(url=url, data=None, params=None)
+    customer_ids = [customer_id['customer_id'] for customer_id in cgi_res.get('items', [])]
+    client_names = []
     
-    customer_ids = [customer_id['customer_id'] for customer_id in cgi_res['items']]
-    return customer_ids
+    for customer_id in customer_ids:
+        client_data = find_client_by_id(branch, int(customer_id))
+        if client_data:
+            client_name = client_data.get('name', 'Неизвестный клиент')
+            client_names.append(client_name)
+        else:
+            client_names.append('Клиент не найден')
+    
+    clients_in_group = [{'customer_id': customer_id, 'client_name': client_name} 
+                       for customer_id, client_name in zip(customer_ids, client_names)]
+    return clients_in_group
 
