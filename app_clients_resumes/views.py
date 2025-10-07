@@ -5,10 +5,12 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.middleware.csrf import get_token
 from django.http import JsonResponse
 from .serializers import TutorRegistrationSerializer
+from .models import TutorProfile
+from app_api.alfa_crm_service.crm_service import get_teacher_group
 
 
 @method_decorator(ensure_csrf_cookie, name='dispatch')
@@ -116,6 +118,74 @@ class TutorRegisterView(APIView):
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TutorGroupsView(APIView):
+    """
+    API endpoint для получения списка групп тьютора.
+    
+    Возвращает список групп, в которых преподает авторизованный тьютор.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Обрабатывает GET запрос для получения групп тьютора.
+        
+        Args:
+            request: HTTP запрос от авторизованного пользователя
+            
+        Returns:
+            Response: JSON ответ с результатом операции:
+                - При успехе: статус 200 со списком групп
+                - При ошибке: статус 400/404 с описанием ошибки
+                
+        Example:
+            GET /api/tutor/groups/
+            
+            Response:
+            {
+                "success": true,
+                "groups": [
+                    {
+                        "id": 123,
+                        "name": "Группа Python",
+                        "teacher_ids": ["teacher1", "teacher2"]
+                    }
+                ]
+            }
+        """
+        try:
+            # Получаем профиль тьютора
+            tutor_profile = TutorProfile.objects.get(user=request.user)
+            
+            if not tutor_profile.tutor_crm_id or not tutor_profile.branch:
+                return Response({
+                    "success": False,
+                    "message": "Профиль тьютора не настроен полностью"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Получаем группы из CRM
+            groups = get_teacher_group(
+                branch=tutor_profile.branch.branch_id,
+                teacher_id=tutor_profile.tutor_crm_id,
+            )
+            
+            return Response({
+                "success": True,
+                "groups": groups
+            }, status=status.HTTP_200_OK)
+            
+        except TutorProfile.DoesNotExist:
+            return Response({
+                "success": False,
+                "message": "Профиль тьютора не найден"
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                "success": False,
+                "message": f"Ошибка при получении групп: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 
 def csrf_token(request):

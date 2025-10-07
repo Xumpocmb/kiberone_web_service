@@ -529,32 +529,35 @@ def get_all_clients(branch_id):
 
 def get_teacher(branch, phone_number):
     url = f"https://kiberoneminsk.s20.online/v2api/{branch}/teacher/index"
-
     data = {"phone": phone_number}
     response = send_request_to_crm(url=url, data=data, params=None)
     return response
 
 
-def get_teacher_group(branch, teacher_id, teacher_name):
+def get_teacher_group(branch, teacher_id):
     url = f"https://kiberoneminsk.s20.online/v2api/{branch}/group/index"
 
     data = {
         "teacher_id": teacher_id
     }
 
-    groups_res = requests.post(url, json=data, headers=headers).json()
-    teacher_groups = []
-    for g in groups_res['items']:
-        if teacher_name in g['teacher_ids']:
-            teacher_groups.append(g)
-    return teacher_groups
+    groups_res = send_request_to_crm(url=url, data=data, params=None)
+    all_groups = groups_res.get('items', [])
+    if all_groups:
+        teacher_id_int = int(teacher_id)
+        filtered_groups = []
+        for group in all_groups:
+            if any(teacher['id'] == teacher_id_int for teacher in group.get('teachers', [])):
+                filtered_groups.append(group)
+        return filtered_groups
+    return None
 
 
 def get_clients_in_group(group_id, branch):
-    headers = auth()
     url = f"https://kiberoneminsk.s20.online/v2api/{branch}/cgi/index?group_id={group_id}"
 
-    cgi_res = requests.post(url, headers=headers).json()
+    cgi_res = send_request_to_crm(url=url, data=None, params=None)
+    
     customer_ids = [customer_id['customer_id'] for customer_id in cgi_res['items']]
     return customer_ids
 
