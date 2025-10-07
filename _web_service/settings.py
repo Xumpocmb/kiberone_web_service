@@ -45,9 +45,11 @@ if DEBUG:
         "http://0.0.0.0:3000",
     ]
 else:
-    # В продакшене — только продакшен-фронтенд
+    # В продакшене — разрешаем и продакшен-фронтенд, и localhost для разработки
     CORS_ALLOWED_ORIGINS = [
         "https://kiberonetgbot.online",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
         "http://0.0.0.0:8000",
     ]
 
@@ -59,6 +61,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "http://0.0.0.0:8000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 # Безопасные cookies
