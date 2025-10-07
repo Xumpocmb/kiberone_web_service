@@ -27,6 +27,7 @@ class TutorProfile(models.Model):
 
 class Resume(models.Model):
     student_crm_id = models.CharField("ID ученика", max_length=10)
+    resume_type = models.CharField("Тип резюме", max_length=100, blank=True, null=True)
     content = models.TextField("Содержание резюме", max_length=5000, blank=True, null=True)
     is_verified = models.BooleanField("Проверено", default=False)
     created_at = models.DateTimeField(auto_now_add=True)

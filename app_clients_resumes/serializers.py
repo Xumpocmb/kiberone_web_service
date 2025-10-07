@@ -28,6 +28,7 @@ class TutorRegistrationSerializer(serializers.Serializer):
         # Получаем tutor_crm_id из CRM API по номеру телефона (username)
         crm_response = get_teacher(tutor_branch_id, username)
         tutor_crm_id = None
+        tutor_crm_name = None
         if crm_response and crm_response.get('items') and len(crm_response['items']) > 0:
             tutor_crm_id = crm_response['items'][0].get('id', None)
             tutor_crm_name = crm_response['items'][0].get('name', None)
