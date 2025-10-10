@@ -36,6 +36,27 @@ ALLOWED_HOSTS = [
 
 CORS_ALLOW_CREDENTIALS = True
 
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
 if DEBUG:
     # В разработке — разрешаем localhost:3000
     CORS_ALLOWED_ORIGINS = [
@@ -67,12 +88,13 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Безопасные cookies
 SESSION_COOKIE_SECURE = not DEBUG  # True в продакшене (HTTPS), False в dev
-CSRF_COOKIE_SECURE = not DEBUG
-
 SESSION_COOKIE_SAMESITE = "Lax"
-CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_HTTPONLY = True
 
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_HTTPONLY = True
+
 
 
 INSTALLED_APPS = [
