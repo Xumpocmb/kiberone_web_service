@@ -1,9 +1,8 @@
 import os
 import openpyxl
 from django.core.management.base import BaseCommand, CommandError
-from django.contrib.auth.models import User
 from django.conf import settings
-from app_clients_resumes.models import Resume
+from app_clients_resumes.models import Resume, TutorProfile
 
 
 class Command(BaseCommand):
@@ -16,12 +15,6 @@ class Command(BaseCommand):
             help='Путь к Excel файлу для импорта',
         )
         parser.add_argument(
-            '--author',
-            type=str,
-            help='Username автора (тьютора) для резюме',
-            required=True,
-        )
-        parser.add_argument(
             '--dry-run',
             action='store_true',
             help='Показать что будет импортировано без сохранения в БД',
@@ -29,14 +22,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         file_path = options.get('file')
-        author_username = options['author']
         dry_run = options.get('dry_run', False)
-
-        # Проверяем автора
-        try:
-            author = User.objects.get(username=author_username)
-        except User.DoesNotExist:
-            raise CommandError(f'Пользователь с username "{author_username}" не найден')
 
         # Если файл не указан, ищем все Excel файлы в static/xlsx-files/
         if not file_path:
@@ -52,11 +38,11 @@ class Command(BaseCommand):
             
             for excel_file in excel_files:
                 file_full_path = os.path.join(xlsx_dir, excel_file)
-                self.process_excel_file(file_full_path, author, dry_run)
+                self.process_excel_file(file_full_path, dry_run)
         else:
             if not os.path.exists(file_path):
                 raise CommandError(f'Файл {file_path} не существует')
-            self.process_excel_file(file_path, author, dry_run)
+            self.process_excel_file(file_path, dry_run)
 
         if dry_run:
             self.stdout.write(
@@ -67,7 +53,7 @@ class Command(BaseCommand):
                 self.style.SUCCESS('Импорт резюме завершен успешно!')
             )
 
-    def process_excel_file(self, file_path, author, dry_run):
+    def process_excel_file(self, file_path, dry_run):
         """Обрабатывает один Excel файл"""
         self.stdout.write(f'\nОбработка файла: {os.path.basename(file_path)}')
         
@@ -83,9 +69,9 @@ class Command(BaseCommand):
         for sheet_name in workbook.sheetnames:
             self.stdout.write(f'  Обработка листа: {sheet_name}')
             worksheet = workbook[sheet_name]
-            self.process_worksheet(worksheet, author, dry_run, sheet_name)
+            self.process_worksheet(worksheet, dry_run, sheet_name)
 
-    def process_worksheet(self, worksheet, author, dry_run, sheet_name):
+    def process_worksheet(self, worksheet, dry_run, sheet_name):
         """Обрабатывает один лист Excel файла"""
         if worksheet.max_row < 2:
             self.stdout.write(f'    Лист {sheet_name} пуст или содержит только заголовки')
@@ -158,7 +144,6 @@ class Command(BaseCommand):
                     resume, created = Resume.objects.get_or_create(
                         student_crm_id=student_crm_id,
                         resume_type=resume_type,
-                        author=author,
                         defaults={
                             'content': resume_content,
                             'is_verified': False
