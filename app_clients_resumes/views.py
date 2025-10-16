@@ -542,9 +542,9 @@ class ResumeVerifyView(APIView):
         operation_summary="Верификация резюме",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            required=['is_verified'],
+            required=['tutor_crm_id'],
             properties={
-                'is_verified': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Новый статус верификации'),
+                'tutor_crm_id': openapi.Schema(type=openapi.TYPE_STRING, description='CRM ID тьютора'),
             },
         ),
         responses={
@@ -555,14 +555,6 @@ class ResumeVerifyView(APIView):
                     properties={
                         'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
                         'message': openapi.Schema(type=openapi.TYPE_STRING, description='Сообщение об успехе'),
-                        'resume': openapi.Schema(
-                            type=openapi.TYPE_OBJECT,
-                            properties={
-                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID резюме'),
-                                'is_verified': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус верификации'),
-                                'updated_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата обновления')
-                            }
-                        )
                     }
                 )
             ),
@@ -584,6 +576,18 @@ class ResumeVerifyView(APIView):
             Response: JSON ответ с результатом операции
         """
         try:
+            tutor_crm_id = request.data.get('tutor_crm_id')
+            if not tutor_crm_id:
+                return Response({"error": "Необходимо указать tutor_crm_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                tutor_profile = TutorProfile.objects.get(tutor_crm_id=tutor_crm_id)
+            except TutorProfile.DoesNotExist:
+                return Response({"error": "Тьютор с таким CRM ID не найден"}, status=status.HTTP_404_NOT_FOUND)
+
+            if not tutor_profile.is_senior:
+                return Response({"error": "Доступ запрещен. Требуется статус старшего тьютора."}, status=status.HTTP_403_FORBIDDEN)
+
             # Получаем резюме по ID
             try:
                 resume = Resume.objects.get(id=resume_id)
@@ -616,8 +620,7 @@ class ResumeVerifyView(APIView):
 
             return Response({
                 "success": True,
-                "message": "Резюме отмечено как проверенное",
-                "resume": resume_data
+                "message": "Резюме отмечено как проверенное"
             }, status=status.HTTP_200_OK)
 
         except Exception as e:

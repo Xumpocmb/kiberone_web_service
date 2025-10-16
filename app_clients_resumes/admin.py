@@ -4,12 +4,12 @@ from .models import TutorProfile, Resume
 
 @admin.register(TutorProfile)
 class TutorProfileAdmin(admin.ModelAdmin):
-    list_display = ('username', 'tutor_name', 'tutor_crm_id', 'branch')
+    list_display = ('username', 'tutor_name', 'tutor_crm_id', 'branch', 'is_senior')
     search_fields = ('username', 'tutor_name', 'tutor_crm_id')
-    list_filter = ('branch',)
+    list_filter = ('branch', 'is_senior')
     fieldsets = (
         ('Данные тьютора', {
-            'fields': ('username', 'tutor_name', 'tutor_crm_id', 'branch')
+            'fields': ('username', 'tutor_name', 'tutor_crm_id', 'branch', 'is_senior')
         }),
     )
 

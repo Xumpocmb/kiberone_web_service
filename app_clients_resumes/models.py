@@ -20,6 +20,7 @@ class TutorProfile(models.Model):
         null=True,
         blank=True
     )
+    is_senior = models.BooleanField("Старший тьютор", default=False)
 
     def __str__(self):
         return f"Профиль тьютора: {self.username}"
