@@ -116,6 +116,8 @@ INSTALLED_APPS = [
     "app_kiberclub",
     "app_kibershop.apps.AppKibershopConfig",
     "app_clients_resumes",
+    "app_users",
+    "app_home",
     # CORS
     'corsheaders',
 ]

@@ -1,0 +1,76 @@
+{% extends "app_home/base.html" %}
+
+{% block title %}Добавить ученика{% endblock %}
+
+{% block content %}
+    <h2>Добавить новых учеников</h2>
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <p>
+            {{ form.branch.label_tag }}
+            <select name="branch" id="id_branch" data-locations-url="{% url 'app_home:ajax_load_locations' %}">
+                <option value="">---------</option>
+                {% for branch in form.branch.field.queryset %}
+                    <option value="{{ branch.pk }}">{{ branch.name }}</option>
+                {% endfor %}
+            </select>
+            {{ form.branch.errors }}
+        </p>
+        <p>
+            {{ form.location.label_tag }}
+            {{ form.location }}
+            {{ form.location.errors }}
+        </p>
+        <p>
+            Sheet Name: <span id="sheet_name"></span>
+        </p>
+        <p>
+            {{ form.file.label_tag }}
+            {{ form.file }}
+            {{ form.file.errors }}
+        </p>
+        <button type="submit" id="submit-button">Начать обработку</button>
+    </form>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script>
+        $('form').submit(function() {
+            $('#submit-button').prop('disabled', true);
+        });
+
+        $("#id_branch").change(function () {
+            var url = $("#id_branch").data("locations-url");
+            var branchId = $(this).val();
+
+            $.ajax({
+                url: url,
+                data: {
+                    'branch': branchId
+                },
+                success: function (data) {
+                    $("#id_location").html('');
+                    $("#id_location").append($('<option>', {
+                        value: "",
+                        text: "---------"
+                    }));
+                    for (var i = 0; i < data.length; i++) {
+                        $("#id_location").append($('<option>', {
+                            value: data[i].id,
+                            text: data[i].name,
+                            'data-sheet-name': data[i].sheet_name
+                        }));
+                    }
+                }
+            });
+        });
+
+        $("#id_location").change(function () {
+            var sheetName = $(this).find(':selected').data('sheet-name');
+            $("#sheet_name").text(sheetName);
+        });
+    </script>
+{% endblock %}

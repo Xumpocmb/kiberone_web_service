@@ -291,16 +291,12 @@ def save_review_from_page(request):
             )
 
 
-def save_review_to_google_sheet(
-    sheet_url: str, sheet_name: str, child_id: str, feedback: str
-):
+def save_review_to_google_sheet(sheet_url: str, sheet_name: str, child_id: str, feedback: str):
     """
     Сохраняет отзыв родителя в Google Таблицу.
     """
     logger.debug("Начало выполнения функции save_review_to_google_sheet")
-
     credentials_path = CREDENTIALS_FILE
-
     scope = [
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive",

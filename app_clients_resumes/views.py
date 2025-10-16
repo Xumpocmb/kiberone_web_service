@@ -95,7 +95,9 @@ class TutorLoginView(APIView):
         try:
             tutor_profile = TutorProfile.objects.get(username=username)
             serializer = TutorProfileSerializer(tutor_profile)
-            return Response(serializer.data)
+            response_data = serializer.data
+            response_data['senior'] = tutor_profile.is_senior
+            return Response(response_data)
         except TutorProfile.DoesNotExist:
             return Response({"error": "Тьютор с таким username не найден"}, status=status.HTTP_404_NOT_FOUND)
 

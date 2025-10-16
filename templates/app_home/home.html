@@ -1,0 +1,10 @@
+{% extends "app_home/base.html" %}
+
+{% block title %}Главная страница{% endblock %}
+
+{% block content %}
+  <h2>Главная страница</h2>
+  {% if user.is_authenticated %}
+    <a href="{% url 'app_home:add_student' %}">Добавить ученика</a>
+  {% endif %}
+{% endblock %}

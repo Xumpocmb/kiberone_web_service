@@ -21,10 +21,11 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", include("app_kiberclub.urls")),
+    path("", include("app_home.urls")),
     path("api/", include("app_api.urls")),
     path("api/clients_resumes/", include("app_clients_resumes.urls")),
     path("kibershop/", include("app_kibershop.urls")),
+    path("users/", include("app_users.urls")),
     # Swagger URLs
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
