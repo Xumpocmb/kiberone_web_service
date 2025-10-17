@@ -4,7 +4,7 @@ from app_kiberclub.models import Branch
 
 
 class TutorProfile(models.Model):
-    username = models.CharField("Username", max_length=150, unique=True)
+    username = models.CharField("Username", max_length=150, unique=True, null=True, blank=True)
     tutor_crm_id = models.CharField(
         max_length=100,
         unique=True,

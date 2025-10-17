@@ -22,6 +22,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("app_home.urls")),
+    path("webapp/", include("app_kiberclub.urls")),
     path("api/", include("app_api.urls")),
     path("api/clients_resumes/", include("app_clients_resumes.urls")),
     path("kibershop/", include("app_kibershop.urls")),

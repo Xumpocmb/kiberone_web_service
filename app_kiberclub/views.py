@@ -41,7 +41,6 @@ def index(request: HttpRequest) -> HttpResponse:
             logger.debug(f"Сохранён tg_id в сессию: {telegram_id_from_req}")
         else:
             telegram_id_from_req = request.session.get("tg_id")
-            logger.debug(f"Получен tg_id из сессии: {telegram_id_from_req}")
             if not telegram_id_from_req:
                 logger.warning(
                     "tg_id отсутствует в сессии и запросе. Перенаправление на страницу ошибки."

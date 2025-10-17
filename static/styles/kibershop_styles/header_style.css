@@ -14,6 +14,16 @@ header {
      /*width: 100vw;*/
 }
 
+#logOut {
+    font-size: 4vw;
+    color: white;
+    margin-right: 1vw;
+    margin-left: 1vw;
+    font-family: 'pf_beausans_prolight';
+    text-decoration: none;
+}
+
+
 button {
     background: none;
     border: none;
