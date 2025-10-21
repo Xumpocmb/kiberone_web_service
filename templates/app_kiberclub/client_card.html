@@ -20,7 +20,7 @@
 <div id="mainDiv">
     <div id="main">
         <div id="backContainer">
-            <a href="{% url "app_kiberclub:index" id="back">←</a>
+            <a href="{% url 'app_kiberclub:index' %}" id="back">←</a>
         </div>
         <section id="infoWithImage">
             <img src="{% static 'img/profile_image.png' %}" alt="Профиль пользователя" id="profileImg">
@@ -91,17 +91,17 @@
                 'X-CSRFToken': '{{ csrf_token }}'
             }
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    document.getElementById('message').innerText = data.message;
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('message').innerText = data.message;
+                        button.innerText = 'Отправить';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
                     button.innerText = 'Отправить';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                button.innerText = 'Отправить';
-            });
+                });
     }
 </script>
 </html>
