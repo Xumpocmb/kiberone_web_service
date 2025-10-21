@@ -5,6 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from time import sleep
 import redis
+
+from app_kiberclub.models import Branch
 from celery_app import app
 import requests
 from dotenv import load_dotenv
@@ -572,3 +574,32 @@ def get_clients_in_group(group_id, branch):
                        for customer_id, client_name in zip(customer_ids, client_names)]
     return clients_in_group
 
+
+def get_all_groups():
+    try:
+        branches_ = Branch.objects.all()
+    except Branch.DoesNotExist:
+        return []
+
+    all_items = []
+    for branch in branches_:
+        url = f"https://kiberoneminsk.s20.online/v2api/{branch.branch_id}/group/index"
+        page = 0
+
+        while True:
+            response: dict = send_request_to_crm(url=url, data={"page": page}, params=None)
+            items = response.get("items", [])
+            current_page_count = len(items)  # или response.get("count", 0), если API возвращает это поле
+            total = response.get("total", 0)
+
+            if current_page_count == 0:
+                break  # больше нет данных
+
+            all_items.extend(items)
+            page += 1
+
+            # Дополнительная защита: если уже собрали все записи
+            if len(all_items) >= total > 0:
+                break
+
+    return all_items

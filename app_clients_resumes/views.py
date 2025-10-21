@@ -6,7 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from .serializers import TutorRegistrationSerializer, TutorProfileSerializer
 from .models import TutorProfile, Resume
-from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group
+from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group, get_all_groups
 
 
 class TutorRegisterView(APIView):
@@ -181,19 +181,24 @@ class TutorGroupsView(APIView):
         try:
             # Получаем профиль тьютора
             tutor_profile = TutorProfile.objects.get(username=username)
+
+
+
             
             if not tutor_profile.tutor_crm_id or not tutor_profile.branch:
                 return Response({
                     "success": False,
                     "message": "Профиль тьютора не настроен полностью"
                 }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Получаем группы из CRM
-            crm_groups = get_teacher_group(
-                branch=tutor_profile.branch.branch_id,
-                teacher_id=tutor_profile.tutor_crm_id,
-            )
-            
+
+            if tutor_profile.is_senior:
+                crm_groups = get_all_groups()
+            else:
+                crm_groups = get_teacher_group(
+                    branch=tutor_profile.branch.branch_id,
+                    teacher_id=tutor_profile.tutor_crm_id,
+                )
+
             groups_data = []
             if crm_groups:
                 for group in crm_groups:
