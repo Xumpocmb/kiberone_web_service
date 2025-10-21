@@ -20,8 +20,8 @@
 <div id="mainDiv">
     <div id="main">
         <div id="backContainer">
-        <button id="back">←</button>
-     </div>
+            <button id="back">←</button>
+        </div>
         <section id="infoWithImage">
             <img src="{% static 'img/profile_image.png' %}" alt="Профиль пользователя" id="profileImg">
             <section id="userInfo">
@@ -34,7 +34,7 @@
                 <b id="location">{{ client.location_name }}</b>
             </section>
         </section>
-        
+
         <section id="buttons">
             <a href="{% url 'app_kibershop:catalog' %}" id="shopLink">KIBERshop</a>
             <a href="{{ portfolio_link }}" id="portfolioLink" target="_blank">Портфолио</a>
@@ -62,12 +62,12 @@
                 <input type="hidden" name="crm_id" value="{{ client.crm_id }}">
                 <input type="hidden" name="room_id" value="{{ client.room_id }}">
                 <input type="hidden" name="profile_id" value="{{ client.profile_id }}">
-                
+
                 <textarea placeholder="Введите ваш отзыв" id="feedbackInput" name="feedbackInput"></textarea>
                 <div id="forSendButton">
                     <button type="submit" id="sendButton">Отправить</button>
                 </div>
-                
+
             </form>
         </section>
     </div>

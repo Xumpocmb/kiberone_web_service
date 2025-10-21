@@ -239,9 +239,9 @@ def get_resume_from_google_sheet(sheet_url: str, sheet_name: str, child_id: str)
             return "Появится позже"
 
         try:
-            resume_col_index = headers.index("Резюме май 2025")
+            resume_col_index = headers.index("Промежуточное резюме октябрь 25")
         except ValueError:
-            logger.error("В таблице нет столбца 'Резюме май 2025'")
+            logger.error("В таблице нет столбца 'Промежуточное резюме октябрь 25'")
             return "Появится позже"
 
         # Поиск нужной строки
