@@ -4,9 +4,9 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group, get_all_groups
 from .serializers import TutorRegistrationSerializer, TutorProfileSerializer
 from .models import TutorProfile, Resume
-from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group, get_all_groups
 
 
 class TutorRegisterView(APIView):
@@ -634,4 +634,81 @@ class ResumeVerifyView(APIView):
             return Response({
                 "success": False,
                 "message": f"Ошибка при верификации резюме: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class UnverifiedResumesView(APIView):
+    """
+    API endpoint для получения списка непроверенных резюме.
+    
+    Возвращает все резюме, у которых is_verified = false.
+    """
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_description="Получение списка непроверенных резюме",
+        operation_summary="Список непроверенных резюме",
+        responses={
+            200: openapi.Response(
+                description="Успешное получение списка непроверенных резюме",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                        'resumes': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID резюме'),
+                                    'student_crm_id': openapi.Schema(type=openapi.TYPE_STRING, description='ID ученика в CRM'),
+                                    'content': openapi.Schema(type=openapi.TYPE_STRING, description='Содержание резюме'),
+                                    'is_verified': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус верификации'),
+                                    'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата создания'),
+                                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата обновления'),
+                                }
+                           )
+                       )
+                    }
+                )
+            ),
+            500: openapi.Response(description="Ошибка при получении резюме")
+        },
+        tags=['Резюме']
+    )
+    def get(self, request):
+        """
+        Обрабатывает GET запрос для получения списка непроверенных резюме.
+        
+        Args:
+            request: HTTP запрос
+            
+        Returns:
+            Response: JSON ответ со списком непроверенных резюме или ошибкой
+        """
+        try:
+            # Получаем все резюме, у которых is_verified = false
+            resumes = Resume.objects.filter(is_verified=False).order_by('-created_at')
+            
+            # Формируем список резюме
+            resumes_data = []
+            for resume in resumes:
+                resumes_data.append({
+                    "id": resume.id,
+                    "student_crm_id": resume.student_crm_id,
+                    "content": resume.content,
+                    "is_verified": resume.is_verified,
+                    "created_at": resume.created_at.isoformat(),
+                    "updated_at": resume.updated_at.isoformat(),
+                })
+            
+            return Response({
+                "success": True,
+                "resumes": resumes_data
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                "success": False,
+                "message": f"Ошибка при получении непроверенных резюме: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
