@@ -1,5 +1,4 @@
 from django.db import models
-from django.db import models
 from app_kiberclub.models import Branch
 
 
@@ -28,7 +27,7 @@ class TutorProfile(models.Model):
 
 class Resume(models.Model):
     student_crm_id = models.CharField("ID ученика", max_length=10)
-    resume_type = models.CharField("Тип резюме", max_length=100, blank=True, null=True)
+    resume_type = models.CharField("Тип резюме", max_length=1000, blank=True, null=True)
     content = models.TextField("Содержание резюме", max_length=5000, blank=True, null=True)
     is_verified = models.BooleanField("Проверено", default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -43,3 +42,17 @@ class Resume(models.Model):
 
     def __str__(self):
         return f"Резюме ученика {self.student_crm_id}"
+
+
+class ParentReview(models.Model):
+    student_crm_id = models.CharField("ID ученика", max_length=10)
+    content = models.TextField("Отзыв родителя", max_length=5000, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Отзыв родителя"
+        verbose_name_plural = "Отзывы родителей"
+
+    def __str__(self):
+        return f"Отзыв родителя для ученика {self.student_crm_id}"

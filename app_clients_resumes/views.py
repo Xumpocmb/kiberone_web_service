@@ -6,7 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group, get_all_groups
 from .serializers import TutorRegistrationSerializer, TutorProfileSerializer
-from .models import TutorProfile, Resume
+from .models import TutorProfile, Resume, ParentReview
 
 
 class TutorRegisterView(APIView):
@@ -711,4 +711,88 @@ class UnverifiedResumesView(APIView):
             return Response({
                 "success": False,
                 "message": f"Ошибка при получении непроверенных резюме: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ParentReviewView(APIView):
+    """
+    API endpoint для получения отзыва родителя по ID ученика.
+    """
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_description="Получение отзыва родителя по ID ученика в CRM",
+        operation_summary="Отзыв родителя",
+        manual_parameters=[
+            openapi.Parameter(
+                'student_crm_id',
+                openapi.IN_PATH,
+                description="ID ученика в CRM системе",
+                type=openapi.TYPE_STRING,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description="Успешное получение отзыва родителя",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                        'review': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID отзыва'),
+                                'student_crm_id': openapi.Schema(type=openapi.TYPE_STRING, description='ID ученика в CRM'),
+                                'content': openapi.Schema(type=openapi.TYPE_STRING, description='Содержание отзыва'),
+                                'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата создания'),
+                                'updated_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата обновления'),
+                            }
+                        )
+                    }
+                )
+            ),
+            404: openapi.Response(description="Отзыв родителя не найден"),
+            50: openapi.Response(description="Ошибка при получении отзыва")
+        },
+        tags=['Отзывы']
+    )
+    def get(self, request, student_crm_id):
+        """
+        Обрабатывает GET запрос для получения отзыва родителя по ID ученика.
+        
+        Args:
+            request: HTTP запрос
+            student_crm_id: ID ученика в CRM
+            
+        Returns:
+            Response: JSON ответ с отзывом родителя или ошибкой
+        """
+        try:
+            # Получаем отзыв родителя по ID ученика
+            parent_review = ParentReview.objects.get(student_crm_id=student_crm_id)
+            
+            # Формируем данные отзыва
+            review_data = {
+                "id": parent_review.id,
+                "student_crm_id": parent_review.student_crm_id,
+                "content": parent_review.content,
+                "created_at": parent_review.created_at.isoformat(),
+                "updated_at": parent_review.updated_at.isoformat(),
+            }
+            
+            return Response({
+                "success": True,
+                "review": review_data
+            }, status=status.HTTP_200_OK)
+            
+        except ParentReview.DoesNotExist:
+            return Response({
+                "success": False,
+                "message": "Отзыв родителя не найден"
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                "success": False,
+                "message": f"Ошибка при получении отзыва родителя: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

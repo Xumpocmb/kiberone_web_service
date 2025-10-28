@@ -1,8 +1,14 @@
-import email
 from rest_framework import serializers
-from .models import TutorProfile
 from app_kiberclub.models import Branch
 from app_api.alfa_crm_service.crm_service import get_teacher
+from .models import TutorProfile, ParentReview
+
+
+class ParentReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ParentReview
+        fields = '__all__'
+
 
 class TutorRegistrationSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
