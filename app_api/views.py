@@ -770,14 +770,16 @@ def get_user_balances(request) -> Response:
             )
 
         # Формируем данные о балансе для каждого клиента
-        balances = [
-            {
-                "client_id": client.id,
-                "client_name": client.name,
-                "balance": float(client.balance) if client.balance else 0.0,
-            }
-            for client in clients
-        ]
+        balances = []
+        for client in clients:
+            client_crm_data = find_client_by_id(client.branch.branch_id, client.crm_id)
+            balances.append(
+                {
+                    "client_id": client.id,
+                    "client_name": client.name,
+                    "balance": client_crm_data.get("balance", 0),
+                }
+            )
 
         return Response(
             {"success": True, "data": balances},
