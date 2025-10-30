@@ -411,7 +411,7 @@ def get_group_link_from_crm(branch_id: int, group_id: int) -> dict | None:
         return {"total": 0}
 
 
-def find_client_by_id(branch_id, crm_id):
+def find_client_by_id(branch_id, crm_id) -> dict | None:
     # Добавляем обязательные параметры фильтрации
     data = {
         "id": crm_id,

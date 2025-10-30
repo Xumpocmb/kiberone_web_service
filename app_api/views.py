@@ -332,7 +332,6 @@ def create_or_update_clients_in_db_view(request) -> Response:
         )
 
 
-
 @api_view(["GET"])
 def get_all_questions(request):
     """
@@ -824,15 +823,18 @@ def get_client_payment_data(request) -> Response:
             )
 
         logger.debug(f"Сбор данных по клиентам пользователя {user_id}")
-        clients_data = [
-            {
-                "crm_id": client.crm_id,
-                "branch_id": client.branch_id,
-                "balance": float(client.balance) if client.balance else 0.0,
-                "name": client.name,
-            }
-            for client in clients
-        ]
+
+        clients_data = []
+        for client in clients:
+            client_crm_data = find_client_by_id(client.branch.branch_id, client.crm_id)
+            clients_data.append(
+                {
+                    "crm_id": client.crm_id,
+                    "branch_id": client.branch_id,
+                    "balance": client_crm_data.get("balance", 0),
+                    "name": client.name,
+                }
+            )
 
         logger.debug(f"Обработка платежных данных для {len(clients_data)} клиентов")
         payment_data = []
@@ -1008,11 +1010,6 @@ def find_client_by_id_view(request) -> Response:
         )
 
 
-
-
-
-
-
 @api_view(["POST"])
 def telegram_callback_handler(request) -> Response:
     """
@@ -1099,9 +1096,3 @@ def telegram_callback_handler(request) -> Response:
             {"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"},
             status=status.HTTP_200_OK,  # Всегда 200 для Telegram, чтобы он не повторял запрос
         )
-
-
-
-
-
-
