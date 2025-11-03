@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from app_kiberclub.models import Branch
 from app_api.alfa_crm_service.crm_service import get_teacher
-from .models import TutorProfile, ParentReview
+from .models import TutorProfile, ParentReview, Resume
 
 
 class ParentReviewSerializer(serializers.ModelSerializer):
@@ -9,6 +9,12 @@ class ParentReviewSerializer(serializers.ModelSerializer):
         model = ParentReview
         fields = '__all__'
 
+
+class ResumeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resume
+        fields = '__all__'
+        read_only_fields = ('created_at', 'updated_at', 'is_verified')
 
 class TutorRegistrationSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)

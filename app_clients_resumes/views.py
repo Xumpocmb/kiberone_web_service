@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group, get_all_groups
-from .serializers import TutorRegistrationSerializer, TutorProfileSerializer
+from .serializers import TutorRegistrationSerializer, TutorProfileSerializer, ResumeSerializer
 from .models import TutorProfile, Resume, ParentReview
 
 
@@ -793,6 +793,157 @@ class ParentReviewView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({
-                "success": False,
-                "message": f"Ошибка при получении отзыва родителя: {str(e)}"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+               "success": False,
+               "message": f"Ошибка при получении отзыва родителя: {str(e)}"
+           }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ResumeCreateView(APIView):
+   """
+   API endpoint для добавления нового резюме.
+   """
+   permission_classes = [AllowAny]
+
+   @swagger_auto_schema(
+       operation_description="Создание нового резюме",
+       operation_summary="Добавление резюме",
+       request_body=ResumeSerializer,
+       responses={
+           201: openapi.Response(
+               description="Резюме успешно создано",
+               schema=openapi.Schema(
+                   type=openapi.TYPE_OBJECT,
+                   properties={
+                       'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                       'message': openapi.Schema(type=openapi.TYPE_STRING, description='Сообщение об успехе'),
+                       'resume': openapi.Schema(
+                           type=openapi.TYPE_OBJECT,
+                           properties={
+                               'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID резюме'),
+                               'student_crm_id': openapi.Schema(type=openapi.TYPE_STRING, description='ID ученика в CRM'),
+                               'content': openapi.Schema(type=openapi.TYPE_STRING, description='Содержание резюме'),
+                               'is_verified': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус верификации'),
+                               'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата создания'),
+                               'updated_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата обновления'),
+                           }
+                       )
+                   }
+               )
+           ),
+           40: openapi.Response(description="Ошибка валидации данных"),
+           50: openapi.Response(description="Ошибка при создании резюме")
+       },
+       tags=['Резюме']
+   )
+   def post(self, request):
+       """
+       Обрабатывает POST запрос для создания нового резюме.
+       
+       Args:
+           request: HTTP запрос с данными для создания резюме
+           
+       Returns:
+           Response: JSON ответ с результатом операции
+       """
+       try:
+           serializer = ResumeSerializer(data=request.data)
+           if serializer.is_valid():
+               resume = serializer.save()
+               
+               # Формируем данные созданного резюме
+               resume_data = {
+                   "id": resume.id,
+                   "student_crm_id": resume.student_crm_id,
+                   "resume_type": resume.resume_type,
+                   "content": resume.content,
+                   "is_verified": resume.is_verified,
+                   "created_at": resume.created_at.isoformat(),
+                   "updated_at": resume.updated_at.isoformat(),
+               }
+               
+               return Response({
+                   "success": True,
+                   "message": "Резюме успешно создано",
+                   "resume": resume_data
+               }, status=status.HTTP_201_CREATED)
+           else:
+               return Response({
+                   "success": False,
+                   "message": "Ошибка валидации данных",
+                   "errors": serializer.errors
+               }, status=status.HTTP_400_BAD_REQUEST)
+               
+       except Exception as e:
+           return Response({
+               "success": False,
+               "message": f"Ошибка при создании резюме: {str(e)}"
+           }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ResumeDeleteView(APIView):
+   """
+   API endpoint для удаления резюме.
+   """
+   permission_classes = [AllowAny]
+
+   @swagger_auto_schema(
+       operation_description="Удаление резюме по ID",
+       operation_summary="Удаление резюме",
+       manual_parameters=[
+           openapi.Parameter(
+               'resume_id',
+               openapi.IN_PATH,
+               description="ID резюме для удаления",
+               type=openapi.TYPE_INTEGER,
+               required=True
+           )
+       ],
+       responses={
+           200: openapi.Response(
+               description="Резюме успешно удалено",
+               schema=openapi.Schema(
+                   type=openapi.TYPE_OBJECT,
+                   properties={
+                       'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                       'message': openapi.Schema(type=openapi.TYPE_STRING, description='Сообщение об успехе'),
+                   }
+               )
+           ),
+           404: openapi.Response(description="Резюме не найдено"),
+           50: openapi.Response(description="Ошибка при удалении резюме")
+       },
+       tags=['Резюме']
+   )
+   def delete(self, request, resume_id):
+       """
+       Обрабатывает DELETE запрос для удаления резюме.
+       
+       Args:
+           request: HTTP запрос
+           resume_id: ID резюме для удаления
+           
+       Returns:
+           Response: JSON ответ с результатом операции
+       """
+       try:
+           try:
+               resume = Resume.objects.get(id=resume_id)
+           except Resume.DoesNotExist:
+               return Response({
+                   "success": False,
+                   "message": f"Резюме с ID {resume_id} не найдено"
+               }, status=status.HTTP_404_NOT_FOUND)
+           
+           # Удаляем резюме
+           resume.delete()
+           
+           return Response({
+               "success": True,
+               "message": "Резюме успешно удалено"
+           }, status=status.HTTP_200_OK)
+           
+       except Exception as e:
+           return Response({
+               "success": False,
+               "message": f"Ошибка при удалении резюме: {str(e)}"
+           }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
