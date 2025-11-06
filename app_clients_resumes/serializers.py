@@ -16,6 +16,12 @@ class ResumeSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('created_at', 'updated_at', 'is_verified')
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Исключаем поле resume_type, так как оно больше не существует в модели
+        if 'resume_type' in self.fields:
+            del self.fields['resume_type']
+
 class TutorRegistrationSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     tutor_branch = serializers.IntegerField(required=True)

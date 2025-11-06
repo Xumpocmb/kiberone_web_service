@@ -22,7 +22,7 @@ class ResumeAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     fieldsets = (
         ('Основная информация', {
-            'fields': ('student_crm_id', 'resume_type', 'content')
+            'fields': ('student_crm_id', 'content')
         }),
         ('Статус', {
             'fields': ('is_verified',)

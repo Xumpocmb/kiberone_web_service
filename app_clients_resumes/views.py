@@ -716,13 +716,13 @@ class UnverifiedResumesView(APIView):
 
 class ParentReviewView(APIView):
     """
-    API endpoint для получения отзыва родителя по ID ученика.
+    API endpoint для получения отзывов родителя по ID ученика.
     """
     permission_classes = [AllowAny]
 
     @swagger_auto_schema(
-        operation_description="Получение отзыва родителя по ID ученика в CRM",
-        operation_summary="Отзыв родителя",
+        operation_description="Получение отзывов родителя по ID ученика в CRM",
+        operation_summary="Отзывы родителя",
         manual_parameters=[
             openapi.Parameter(
                 'student_crm_id',
@@ -734,67 +734,67 @@ class ParentReviewView(APIView):
         ],
         responses={
             200: openapi.Response(
-                description="Успешное получение отзыва родителя",
+                description="Успешное получение отзывов родителя",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
                         'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
-                        'review': openapi.Schema(
-                            type=openapi.TYPE_OBJECT,
-                            properties={
-                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID отзыва'),
-                                'student_crm_id': openapi.Schema(type=openapi.TYPE_STRING, description='ID ученика в CRM'),
-                                'content': openapi.Schema(type=openapi.TYPE_STRING, description='Содержание отзыва'),
-                                'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата создания'),
-                                'updated_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата обновления'),
-                            }
+                        'reviews': openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID отзыва'),
+                                    'student_crm_id': openapi.Schema(type=openapi.TYPE_STRING, description='ID ученика в CRM'),
+                                    'content': openapi.Schema(type=openapi.TYPE_STRING, description='Содержание отзыва'),
+                                    'created_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата создания'),
+                                    'updated_at': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='Дата обновления'),
+                                }
+                            )
                         )
                     }
                 )
             ),
-            404: openapi.Response(description="Отзыв родителя не найден"),
-            50: openapi.Response(description="Ошибка при получении отзыва")
+            404: openapi.Response(description="Отзывы родителя не найдены"),
+            500: openapi.Response(description="Ошибка при получении отзывов")
         },
         tags=['Отзывы']
     )
     def get(self, request, student_crm_id):
         """
-        Обрабатывает GET запрос для получения отзыва родителя по ID ученика.
+        Обрабатывает GET запрос для получения отзывов родителя по ID ученика.
         
         Args:
             request: HTTP запрос
             student_crm_id: ID ученика в CRM
             
         Returns:
-            Response: JSON ответ с отзывом родителя или ошибкой
+            Response: JSON ответ со списком отзывов родителя или ошибкой
         """
         try:
-            # Получаем отзыв родителя по ID ученика
-            parent_review = ParentReview.objects.get(student_crm_id=student_crm_id)
+            # Получаем все отзывы родителя по ID ученика
+            parent_reviews = ParentReview.objects.filter(student_crm_id=student_crm_id)
             
-            # Формируем данные отзыва
-            review_data = {
-                "id": parent_review.id,
-                "student_crm_id": parent_review.student_crm_id,
-                "content": parent_review.content,
-                "created_at": parent_review.created_at.isoformat(),
-                "updated_at": parent_review.updated_at.isoformat(),
-            }
+            # Формируем список отзывов
+            reviews_data = []
+            for review in parent_reviews:
+                reviews_data.append({
+                    "id": review.id,
+                    "student_crm_id": review.student_crm_id,
+                    "content": review.content,
+                    "created_at": review.created_at.isoformat(),
+                    "updated_at": review.updated_at.isoformat(),
+                })
             
             return Response({
                 "success": True,
-                "review": review_data
+                "reviews": reviews_data
             }, status=status.HTTP_200_OK)
             
-        except ParentReview.DoesNotExist:
-            return Response({
-                "success": False,
-                "message": "Отзыв родителя не найден"
-            }, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({
                "success": False,
-               "message": f"Ошибка при получении отзыва родителя: {str(e)}"
+               "message": f"Ошибка при получении отзывов родителя: {str(e)}"
            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -854,7 +854,6 @@ class ResumeCreateView(APIView):
                resume_data = {
                    "id": resume.id,
                    "student_crm_id": resume.student_crm_id,
-                   "resume_type": resume.resume_type,
                    "content": resume.content,
                    "is_verified": resume.is_verified,
                    "created_at": resume.created_at.isoformat(),

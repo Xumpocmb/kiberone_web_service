@@ -123,7 +123,7 @@ class Command(BaseCommand):
             processed_count += 1
 
             # Обрабатываем каждый столбец с резюме
-            for col_index, resume_type in resume_columns.items():
+            for col_index, resume_header in resume_columns.items():
                 resume_cell = worksheet.cell(row=row_num, column=col_index)
                 resume_content = resume_cell.value
                 
@@ -136,16 +136,14 @@ class Command(BaseCommand):
                 if dry_run:
                     self.stdout.write(
                         f'    [DRY RUN] Сохранил бы резюме: ID={student_crm_id}, '
-                        f'Имя={student_name}, Тип={resume_type}, '
-                        f'Длина={len(resume_content)} символов'
+                        f'Имя={student_name}, Длина={len(resume_content)} символов'
                     )
                 else:
-                    # Сохраняем резюме в БД с учетом типа резюме
+                    # Сохраняем резюме в БД
                     resume, created = Resume.objects.get_or_create(
                         student_crm_id=student_crm_id,
-                        resume_type=resume_type,
+                        content=resume_content,
                         defaults={
-                            'content': resume_content,
                             'is_verified': False
                         }
                     )
@@ -161,7 +159,7 @@ class Command(BaseCommand):
                     saved_count += 1
                     self.stdout.write(
                         f'    Резюме {action}: ID={student_crm_id}, '
-                        f'Имя={student_name}, Тип={resume_type}'
+                        f'Имя={student_name}'
                     )
 
         self.stdout.write(
@@ -181,6 +179,6 @@ class Command(BaseCommand):
             
             # Ищем столбцы, содержащие слово "резюме"
             if 'резюме' in header_lower:
-                resume_columns[i] = str(header).strip()
+                resume_columns[i] = 'резюме'  # используем обобщенное название
         
         return resume_columns
