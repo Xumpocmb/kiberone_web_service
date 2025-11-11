@@ -1,5 +1,5 @@
 from django.urls import path
-from app_clients_resumes.views import TutorRegisterView, TutorLoginView, TutorGroupsView, GroupClientsView, ClientResumesView, ResumeUpdateView, ResumeVerifyView, UnverifiedResumesView, ParentReviewView, ResumeCreateView, ResumeDeleteView
+from app_clients_resumes.views import TutorRegisterView, TutorLoginView, TutorGroupsView, GroupClientsView, ClientResumesView, ResumeUpdateView, ResumeVerifyView, UnverifiedResumesView, ParentReviewView, ResumeCreateView, ResumeDeleteView, ClientDetailView
 
 app_name = 'app_clients_resumes'
 
@@ -16,4 +16,5 @@ urlpatterns = [
     path("parent-review/<str:student_crm_id>/", ParentReviewView.as_view(), name="parent_review"),
     path("resume/", ResumeCreateView.as_view(), name="resume_create"),
     path("resume/<int:resume_id>/delete/", ResumeDeleteView.as_view(), name="resume_delete"),
+    path("client-detail/", ClientDetailView.as_view(), name="client_detail"),
 ]

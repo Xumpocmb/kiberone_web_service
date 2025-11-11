@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group, get_all_groups
+from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group, get_all_groups, find_client_by_id
 from .serializers import TutorRegistrationSerializer, TutorProfileSerializer, ResumeSerializer
 from .models import TutorProfile, Resume, ParentReview
 
@@ -879,6 +879,99 @@ class ResumeCreateView(APIView):
            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+class ClientDetailView(APIView):
+    """
+    API endpoint для получения клиента по его ID из CRM.
+    """
+    permission_classes = [AllowAny]
+
+    @swagger_auto_schema(
+        operation_description="Получение клиента по ID из CRM",
+        operation_summary="Получение информации о клиенте",
+        manual_parameters=[
+            openapi.Parameter(
+                'client_crm_id',
+                openapi.IN_QUERY,
+                description="ID клиента в CRM системе",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            ),
+            openapi.Parameter(
+                'branch_id',
+                openapi.IN_QUERY,
+                description="ID филиала",
+                type=openapi.TYPE_INTEGER,
+                required=True
+            )
+        ],
+        responses={
+            200: openapi.Response(
+                description="Успешное получение информации о клиенте",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'success': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='Статус операции'),
+                        'client': openapi.Schema(type=openapi.TYPE_OBJECT, description='Данные клиента'),
+                    }
+                )
+            ),
+            400: openapi.Response(description="Отсутствует обязательный параметр"),
+            404: openapi.Response(description="Клиент не найден"),
+            500: openapi.Response(description="Ошибка при получении данных клиента")
+        },
+        tags=['Клиенты']
+    )
+    def get(self, request):
+        """
+        Обрабатывает GET запрос для получения клиента по его ID.
+        
+        Args:
+            request: HTTP запрос с параметрами client_crm_id и branch_id
+            
+        Returns:
+            Response: JSON ответ с информацией о клиенте или ошибкой
+        """
+        try:
+            client_crm_id = request.GET.get('client_crm_id')
+            branch_id = request.GET.get('branch_id')
+
+            if not client_crm_id:
+                return Response({
+                    "success": False,
+                    "message": "Параметр client_crm_id обязателен"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            if not branch_id:
+                return Response({
+                    "success": False,
+                    "message": "Параметр branch_id обязателен"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            client_data = find_client_by_id(int(branch_id), int(client_crm_id))
+
+            if client_data:
+                return Response({
+                    "success": True,
+                    "client": client_data
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    "success": False,
+                    "message": f"Клиент с ID {client_crm_id} не найден в филиале {branch_id}"
+                }, status=status.HTTP_404_NOT_FOUND)
+
+        except ValueError:
+            return Response({
+                "success": False,
+                "message": "client_crm_id и branch_id должны быть целыми числами"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+               "success": False,
+               "message": f"Ошибка при получении данных клиента: {str(e)}"
+           }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class ResumeDeleteView(APIView):
    """
    API endpoint для удаления резюме.
@@ -909,7 +1002,7 @@ class ResumeDeleteView(APIView):
                )
            ),
            404: openapi.Response(description="Резюме не найдено"),
-           50: openapi.Response(description="Ошибка при удалении резюме")
+           500: openapi.Response(description="Ошибка при удалении резюме")
        },
        tags=['Резюме']
    )
