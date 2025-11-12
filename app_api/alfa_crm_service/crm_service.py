@@ -334,8 +334,8 @@ def get_tariff_price(branch_id, tariff_id):
     tariff_objects = send_request_to_crm(url, data, None)
     tariff_objects_items = tariff_objects.get("items")
     last_page = 1
-    if tariff_objects.get("count") != 0:
-        last_page = tariff_objects.get("total") // tariff_objects.get("count")
+    if tariff_objects.get("count") is not None and int(tariff_objects.get("count")) != 0:
+        last_page = int(tariff_objects.get("total", 0)) // int(tariff_objects.get("count", 1))
     while page <= last_page:
         for tariff in tariff_objects_items:
             if tariff.get("id") == tariff_id:
@@ -353,8 +353,8 @@ def get_curr_discount(branch_id, user_crm_id, curr_date):
     discounts = send_request_to_crm(url, data, None)
     discounts_items = discounts.get("items")
     last_page = 1
-    if discounts.get("count") != 0:
-        last_page = discounts.get("total") // discounts.get("count")
+    if discounts.get("count") is not None and int(discounts.get("count")) != 0:
+        last_page = int(discounts.get("total", 0)) // int(discounts.get("count", 1))
     while page < last_page:
         for discount in sorted(
             discounts_items, key=lambda x: datetime.strptime(x.get("end"), "%d.%m.%Y")
