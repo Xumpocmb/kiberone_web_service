@@ -131,7 +131,7 @@ def open_profile(request):
             f"Получены данные об уроках для клиента {client_id}: {lessons_data}"
         )
 
-        if lessons_data and lessons_data.get("total", 0) > 0:
+        if lessons_data and int(lessons_data.get("total", 0)) > 0:
             lesson = lessons_data.get("items", [])[-1]
             room_id = lesson.get("room_id")
             subject_id = lesson.get("subject_id")
