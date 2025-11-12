@@ -4,12 +4,12 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from time import sleep
+import requests
 import redis
+from dotenv import load_dotenv
 
 from app_kiberclub.models import Branch
 from celery_app import app
-import requests
-from dotenv import load_dotenv
 
 load_dotenv()
 
