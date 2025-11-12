@@ -163,8 +163,8 @@ def find_user_by_phone(phone_number: str) -> dict | None:
                 logger.warning("Получен пустой результат, пропускаем.")
 
     # Обработка результатов
-    total_sum = sum(result.get("total", 0) for result in results)
-    count_sum = sum(result.get("count", 0) for result in results)
+    total_sum = sum(int(result.get("total", 0)) for result in results)
+    count_sum = sum(int(result.get("count", 0)) for result in results)
     all_items = [item for result in results for item in result.get("items", [])]
 
     result_answer = {

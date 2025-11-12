@@ -285,7 +285,7 @@ def create_or_update_clients_in_db_view(request) -> Response:
                 lesson_status=1,  # Запланированные уроки
                 lesson_type=2,  # Групповые уроки
             )
-            has_scheduled_lessons: bool = bool(lessons and lessons.get("total", 0) > 0)
+            has_scheduled_lessons: bool = bool(lessons and int(lessons.get("total", 0)) > 0)
 
             client, created = Client.objects.update_or_create(
                 crm_id=str(item["id"]),
@@ -295,7 +295,7 @@ def create_or_update_clients_in_db_view(request) -> Response:
                     "is_study": bool(item["is_study"]),
                     "name": item.get("name"),
                     "dob": parse_date(item.get("dob")),
-                    "balance": item.get("balance"),
+                    "balance": float(item.get("balance", 0) or 0),
                     "next_lesson_date": parse_date(item.get("next_lesson_date")),
                     "paid_till": parse_date(item.get("paid_till")),
                     "note": item.get("note"),
