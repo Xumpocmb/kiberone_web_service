@@ -13,17 +13,14 @@ from app_api.alfa_crm_service.crm_service import get_client_lessons, get_taught_
 
 logger = logging.getLogger(__name__)
 
+
 def send_telegram_message(chat_id, text):
     token = getattr(settings, "TELEGRAM_BOT_TOKEN", None)
     if not token:
         raise ValueError("TELEGRAM_BOT_TOKEN не настроен")
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "HTML"
-    }
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
     try:
         response = requests.post(url, json=payload)
         if not response.ok:
@@ -44,14 +41,7 @@ def send_telegram_message_with_inline_keyboard(chat_id, text, inline_keyboard):
         raise ValueError("TELEGRAM_BOT_TOKEN не настроен")
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {
-        "chat_id": chat_id, 
-        "text": text, 
-        "parse_mode": "HTML",
-        "reply_markup": {
-            "inline_keyboard": inline_keyboard
-        }
-    }
+    payload = {"chat_id": chat_id, "text": text, "parse_mode": "HTML", "reply_markup": {"inline_keyboard": inline_keyboard}}
     try:
         response = requests.post(url, json=payload)
         if not response.ok:
@@ -71,14 +61,14 @@ def send_telegram_document(chat_id, file_path, caption=None):
         raise ValueError("TELEGRAM_BOT_TOKEN не настроен")
 
     url = f"https://api.telegram.org/bot{token}/sendDocument"
-    
+
     try:
-        with open(file_path, 'rb') as file:
-            files = {'document': file}
-            data = {'chat_id': chat_id}
+        with open(file_path, "rb") as file:
+            files = {"document": file}
+            data = {"chat_id": chat_id}
             if caption:
-                data['caption'] = caption
-                
+                data["caption"] = caption
+
             response = requests.post(url, files=files, data=data)
             if not response.ok:
                 raise Exception(f"Ошибка Telegram API: {response.text}")
@@ -87,6 +77,7 @@ def send_telegram_document(chat_id, file_path, caption=None):
         raise e
 
     logger.info(f"[Telegram] Отправлен файл {file_path} для {chat_id}")
+
 
 @shared_task
 def send_birthday_congratulations():
@@ -97,11 +88,8 @@ def send_birthday_congratulations():
     logger.info("Запущена проверка дней рождения клиентов и отправка поздравлений...")
 
     # Получаем всех клиентов, у которых сегодня день рождения
-    clients = Client.objects.select_related("user").filter(
-        dob__day=today.day,
-        dob__month=today.month
-    )
-    
+    clients = Client.objects.select_related("user").filter(dob__day=today.day, dob__month=today.month)
+
     for client in clients:
         user: AppUser = client.user
         if not user or not user.telegram_id:
@@ -138,19 +126,19 @@ def check_clients_balance_and_notify():
         user: AppUser = client.user
         if not user or not user.telegram_id:
             continue
-        
+
         lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=2)
         planned_lessons_count = lesson_response.get("total", 0)
         if planned_lessons_count > 0:
-            if lesson_response.get('total', 0) > lesson_response.get('count', 0):
-                page = lesson_response.get('total', 0) // lesson_response.get('count', 1)
+            if lesson_response.get("total", 0) > lesson_response.get("count", 0):
+                page = lesson_response.get("total", 0) // lesson_response.get("count", 1)
             else:
                 page = 0
             logger.info(f"page: {page}")
             lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=2, page=page)
             last_user_lesson = lesson_response.get("items", [])[-1]
             next_lesson_date = last_user_lesson.get("lesson_date") if last_user_lesson.get("lesson_date") else last_user_lesson.get("date")
-        
+
             # если урок сегодня, то отправить уведомление
             if timezone.now().strftime("%Y-%m-%d") == next_lesson_date:
                 message = (
@@ -158,12 +146,13 @@ def check_clients_balance_and_notify():
                     "Чтобы оплатить обучение KIBERone, нажмите на боковую кнопку Меню->КИБЕРменю->Оплатить\n\n"
                     "Ваш KIBERone!\n"
                 )
-                
+
                 reminder_message = (
                     "Уважаемый клиент!\n"
                     "У нас не отобразилась ваша оплата за занятия.\n"
                     "Чтобы оплатить обучение KIBERone, нажмите на боковую кнопку Меню->КИБЕРменю->Оплатить\n\n"
-                    "Ваш KIBERone!\n")
+                    "Ваш KIBERone!\n"
+                )
 
                 # Выбираем сообщение в зависимости от текущей даты
                 current_day = now.day
@@ -182,27 +171,26 @@ def check_clients_lessons_before():
     """
     Проверяет клиентов и отправляет уведомления тем, у кого пробные занятия завтра
     """
-    
+
     # Получаем клиентов с количеством оплаченных занятий меньше 1
     clients = Client.objects.select_related("user").filter(paid_lesson_count__lt=1)
 
     for client in clients:
-        
+
         # Запрос пробных занятий
         lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=3)
-        
+
         total_trial_lessons = lesson_response.get("total", 0)
-        
+
         if total_trial_lessons > 0:
             trial_lesson = lesson_response.get("items", [])[0]
             lesson_date = trial_lesson.get("date", None)
             lesson_time = f"{trial_lesson.get('time_from').split(' ')[1][:-3]}"
             room_id = trial_lesson.get("room_id", None)
-            
-            
+
             # Поиск локации
             location = Location.objects.filter(location_crm_id=room_id).first()
-            
+
             if location:
                 message = (
                     f"🔔 Ваше пробное занятие в КИБЕР-школе уже завтра!\n"
@@ -215,38 +203,37 @@ def check_clients_lessons_before():
                     send_telegram_message(client.user.telegram_id, message)
                 except Exception as e:
                     continue
-        
+
         # НАПОМИНАНИЕ О ПЕРВОМ ЗАНЯТИИ
-        
+
         # запланированные уроки
         lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=2)
-        
+
         planned_lessons_count = lesson_response.get("total", 0)
-        
+
         if planned_lessons_count > 0:
             # проведенные уроки
             user_taught_lessons = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=3, lesson_type=2)
             # если нет посещенных уроков
             taught_lessons_count = user_taught_lessons.get("total", 0)
-            
+
             if taught_lessons_count == 0:
                 # забираем последний запланированный урок
-                if lesson_response.get('total', 0) > lesson_response.get('count', 0):
-                    page = lesson_response.get('total', 0) // lesson_response.get('count', 1)
+                if lesson_response.get("total", 0) > lesson_response.get("count", 0):
+                    page = lesson_response.get("total", 0) // lesson_response.get("count", 1)
                 else:
                     page = 0
                 lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=2, page=page)
                 last_user_lesson = lesson_response.get("items", [])[-1]
-                
+
                 next_lesson_date = last_user_lesson.get("lesson_date") if last_user_lesson.get("lesson_date") else last_user_lesson.get("date")
-                
+
                 room_id = last_user_lesson.get("room_id", None)
                 location = Location.objects.filter(location_crm_id=room_id).first()
-                
-                
+
                 # проверить что урок завтра
                 tomorrow_date = (timezone.now() + timezone.timedelta(days=1)).strftime("%Y-%m-%d")
-                
+
                 if next_lesson_date == tomorrow_date:
                     message = (
                         f"🔔 Ваше первое занятие в КИБЕР-школе уже завтра!\n"
@@ -255,7 +242,7 @@ def check_clients_lessons_before():
                         f"Адрес: {location.name}\n{location.map_url}\n\n"
                         "Ваш KIBERone ♥"
                     )
-                    
+
                     try:
                         send_telegram_message(client.user.telegram_id, message)
                     except Exception as e:
@@ -270,11 +257,8 @@ def check_client_passed_trial_lessons():
     logger.info("Старт задачи проверки пробных занятий для всех пользователей")
 
     # Исправленный запрос: получаем пользователей с их клиентами и филиалами
-    users_qs = AppUser.objects.prefetch_related(
-        "clients",
-        "clients__branch"
-    ).filter(clients__isnull=False).distinct()
-    
+    users_qs = AppUser.objects.prefetch_related("clients", "clients__branch").filter(clients__isnull=False).distinct()
+
     notification_count = 0
 
     for user in users_qs:
@@ -313,13 +297,10 @@ def check_client_passed_trial_lessons():
                             "А сегодня ловите ловите гайд по анимации в ROBLOX — оживите персонажей и попробуйте себя в роли разработчика 🔥\n\n"
                             "До встречи на занятиях в KIBERone! 🚀"
                         )
-                        
+
                         # Создаем инлайн клавиатуру с кнопкой-ссылкой "Получить подарок"
-                        inline_keyboard = [[{
-                            "text": "Получить подарок",
-                            "url": "https://clixtrac.com/goto/?321635"
-                        }]]
-                        
+                        inline_keyboard = [[{"text": "Получить подарок", "url": "https://clixtrac.com/goto/?322062"}]]
+
                         try:
                             send_telegram_message_with_inline_keyboard(user.telegram_id, message, inline_keyboard)
                             notification_count += 1
