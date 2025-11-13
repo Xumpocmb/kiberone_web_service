@@ -180,7 +180,7 @@ def check_clients_lessons_before():
         # Запрос пробных занятий
         lesson_response = get_client_lessons(user_crm_id=client.crm_id, branch_id=client.branch_id, lesson_status=1, lesson_type=3)
 
-        total_trial_lessons = lesson_response.get("total", 0)
+        total_trial_lessons = int(lesson_response.get("total", 0))
 
         if total_trial_lessons > 0:
             trial_lesson = lesson_response.get("items", [])[0]
