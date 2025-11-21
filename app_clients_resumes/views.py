@@ -4,9 +4,14 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.views.generic import TemplateView
 from app_api.alfa_crm_service.crm_service import get_teacher_group, get_clients_in_group, get_all_groups, find_client_by_id
 from .serializers import TutorRegistrationSerializer, TutorProfileSerializer, ResumeSerializer
 from .models import TutorProfile, Resume, ParentReview
+
+
+class ReactAppView(TemplateView):
+    template_name = "app_clients_resumes/build/index.html"
 
 
 class TutorRegisterView(APIView):

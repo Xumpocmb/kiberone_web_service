@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.css": "/static/css/main.9f4796b5.css",
+    "main.js": "/static/js/main.f92c0237.js",
+    "static/js/453.117b0875.chunk.js": "/static/js/453.117b0875.chunk.js",
+    "static/media/kiberlogo.jpg": "/static/media/kiberlogo.dc1997ad4b61c3685808.jpg",
+    "static/media/Cancel_icon.png": "/static/media/Cancel_icon.71e6061657131462b5a6.png",
+    "static/media/exit.png": "/static/media/exit.6edfbbcd0666d66100d2.png",
+    "index.html": "/index.html",
+    "main.9f4796b5.css.map": "/static/css/main.9f4796b5.css.map",
+    "main.f92c0237.js.map": "/static/js/main.f92c0237.js.map",
+    "453.117b0875.chunk.js.map": "/static/js/453.117b0875.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.9f4796b5.css",
+    "static/js/main.f92c0237.js"
+  ]
+}

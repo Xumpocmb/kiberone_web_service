@@ -1,5 +1,5 @@
 from django.urls import path
-from app_clients_resumes.views import TutorRegisterView, TutorLoginView, TutorGroupsView, GroupClientsView, ClientResumesView, ResumeUpdateView, ResumeVerifyView, UnverifiedResumesView, ParentReviewView, ResumeCreateView, ResumeDeleteView, ClientDetailView
+from app_clients_resumes.views import TutorRegisterView, TutorLoginView, TutorGroupsView, GroupClientsView, ClientResumesView, ResumeUpdateView, ResumeVerifyView, UnverifiedResumesView, ParentReviewView, ResumeCreateView, ResumeDeleteView, ClientDetailView, ReactAppView
 
 app_name = 'app_clients_resumes'
 
@@ -17,4 +17,6 @@ urlpatterns = [
     path("resume/", ResumeCreateView.as_view(), name="resume_create"),
     path("resume/<int:resume_id>/delete/", ResumeDeleteView.as_view(), name="resume_delete"),
     path("client-detail/", ClientDetailView.as_view(), name="client_detail"),
+    # React SPA
+    path("", ReactAppView.as_view(), name="react-app"),
 ]
