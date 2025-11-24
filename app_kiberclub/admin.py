@@ -1,6 +1,6 @@
 import logging
 from time import sleep
-
+from .models import GiftLink
 import requests
 from django.conf import settings
 from django.contrib import admin, messages
@@ -191,3 +191,6 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
         messages.info(request, f"Рассылка запущена как фоновая задача (ID: {task.id})")
+
+
+admin.site.register(GiftLink)
