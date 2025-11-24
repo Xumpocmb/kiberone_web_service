@@ -46,7 +46,7 @@
         </div>
         <form id="orderForm" action="{% url 'app_kibershop:make_order' %}" method="post">
             {% csrf_token %}
-            <button type="submit" id="fullOrderButton" disabled><img src="{% static 'img/kibershop/money.svg' %}"
+            <button type="submit" id="fullOrderButton"><img src="{% static 'img/kibershop/money.svg' %}"
                     id="fullOrderButtonImg">Предзаказ</button>
         </form>
 
