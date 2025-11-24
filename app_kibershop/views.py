@@ -148,51 +148,51 @@ def make_order(request):
             return redirect(request.META.get("HTTP_REFERER"))
 
         # сохранение в таблице
-        sheet_url = user_in_db.branch.sheet_url
-        room_id = request.session.get("room_id")
-        location = Location.objects.filter(location_crm_id=room_id).first()
-        location_sheet_name = location.sheet_name
-        child_id = user_in_db.crm_id
-        scope = [
-            "https://spreadsheets.google.com/feeds",
-            "https://www.googleapis.com/auth/drive"
-        ]
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
-        client = gspread.authorize(credentials)
+        # sheet_url = user_in_db.branch.sheet_url
+        # room_id = request.session.get("room_id")
+        # location = Location.objects.filter(location_crm_id=room_id).first()
+        # location_sheet_name = location.sheet_name
+        # child_id = user_in_db.crm_id
+        # scope = [
+        #     "https://spreadsheets.google.com/feeds",
+        #     "https://www.googleapis.com/auth/drive"
+        # ]
+        # credentials = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_FILE, scope)
+        # client = gspread.authorize(credentials)
 
-        try:
-            sheet = client.open_by_url(sheet_url).worksheet(location_sheet_name)
-        except Exception as e:
-            # print(f"Ошибка при открытии таблицы: {e}")
-            return False
+        # try:
+        #     sheet = client.open_by_url(sheet_url).worksheet(location_sheet_name)
+        # except Exception as e:
+        #     # print(f"Ошибка при открытии таблицы: {e}")
+        #     return False
 
-        headers = sheet.row_values(1)
+        # headers = sheet.row_values(1)
 
-        try:
-            kibershop_column_index = headers.index("Кибершоп") + 1
-        except ValueError:
-            messages.error(request, "Столбец 'Кибершоп' не найден в таблице.", extra_tags="danger")
-            return redirect(request.META.get('HTTP_REFERER'))
+        # try:
+        #     kibershop_column_index = headers.index("Кибершоп") + 1
+        # except ValueError:
+        #     messages.error(request, "Столбец 'Кибершоп' не найден в таблице.", extra_tags="danger")
+        #     return redirect(request.META.get('HTTP_REFERER'))
 
-        data = sheet.get_all_records()
-        for index, row in enumerate(data, start=2):
-            if str(row.get("ID ребенка")) == str(child_id):
-                try:
-                    user_orders = Order.objects.filter(user__crm_id=client_id)
-                    order_data = []
-                    for order in user_orders:
-                        for item in order.items.all():
-                            product_name = item.product.name
-                            quantity = item.quantity
-                            order_data.append(f"Товар: {product_name} | Количество ({quantity} шт.) | Стоимость: {item.product.price}")
+        # data = sheet.get_all_records()
+        # for index, row in enumerate(data, start=2):
+        #     if str(row.get("ID ребенка")) == str(child_id):
+        #         try:
+        #             user_orders = Order.objects.filter(user__crm_id=client_id)
+        #             order_data = []
+        #             for order in user_orders:
+        #                 for item in order.items.all():
+        #                     product_name = item.product.name
+        #                     quantity = item.quantity
+        #                     order_data.append(f"Товар: {product_name} | Количество ({quantity} шт.) | Стоимость: {item.product.price}")
 
-                    order_info = "\n".join(order_data)
+        #             order_info = "\n".join(order_data)
 
-                    cell = rowcol_to_a1(index, kibershop_column_index)
-                    sheet.update(cell, [[order_info]])
-                except Exception as e:
-                    messages.error(request, f"Ошибка при обновлении ячейки: {e}", extra_tags="danger")
-                    return redirect(request.META.get('HTTP_REFERER'))
+        #             cell = rowcol_to_a1(index, kibershop_column_index)
+        #             sheet.update(cell, [[order_info]])
+        #         except Exception as e:
+        #             messages.error(request, f"Ошибка при обновлении ячейки: {e}", extra_tags="danger")
+        #             return redirect(request.META.get('HTTP_REFERER'))
 
         Cart.objects.filter(user=user_in_db).delete()
         messages.success(request, "Заказ успешно создан!", extra_tags="success")
