@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from app_kibershop.models import Category, Product, OrderItem, Order, ClientKiberons, Cart
+from app_kibershop.models import Category, Product, OrderItem, Order, Cart
 
 
 @admin.register(Category)
@@ -24,11 +24,6 @@ class OrderAdmin(admin.ModelAdmin):
     inlines = [OrderItemInline]
     list_display = ['__str__']
     # search_fields = ['user__phone_number']
-
-
-@admin.register(ClientKiberons)
-class ClientKiberonsAdmin(admin.ModelAdmin):
-    model = ClientKiberons
 
 
 @admin.register(Cart)

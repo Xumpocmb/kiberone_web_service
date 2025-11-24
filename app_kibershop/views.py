@@ -1,3 +1,5 @@
+from email import message
+from urllib import response
 import gspread
 from django.contrib import messages
 from django.db.models import Sum, F
@@ -5,10 +7,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 
 from oauth2client.service_account import ServiceAccountCredentials
 from gspread.utils import rowcol_to_a1
+from app_api.alfa_crm_service.crm_service import get_client_kiberons, spent_client_kiberons
 from app_kiberclub.models import Client, Location
-from app_kibershop.models import Category, Product, Cart, Order, OrderItem, ClientKiberons
-
-
+from app_kibershop.models import Category, Product, Cart, Order, OrderItem
 
 
 CREDENTIALS_FILE = 'kiberone-tg-bot-a43691efe721.json'
@@ -94,16 +95,11 @@ def make_order(request):
 
         # кибероны
         try:
-            user_orders = Order.objects.filter(user=user_in_db)
-            user_kiberons_db = ClientKiberons.objects.filter(client=user_in_db).first()
-            if not user_kiberons_db:
+            user_kiberons_count = get_client_kiberons(user_in_db.branch.id, client_id)
+            if not user_kiberons_count:
                 messages.error(request, "Нам не удалось получить количество ваших киберонов.", extra_tags="danger")
                 return redirect(request.META.get('HTTP_REFERER'))
-            if user_orders.exists():
-                user_kiberons_count = int(user_kiberons_db.remain_kiberons_count)
-            else:
-                user_kiberons_count = int(user_kiberons_db.start_kiberons_count)
-        except Order.DoesNotExist:
+        except Exception as e:
             messages.error(request, f"Ошибка при получении заказов пользователя", extra_tags="danger")
             return redirect(request.META.get('HTTP_REFERER'))
 
@@ -119,14 +115,6 @@ def make_order(request):
 
         if user_kiberons_count < total_sum:
             messages.error(request, 'Недостаточно киберонов', extra_tags='danger')
-            return redirect(request.META.get('HTTP_REFERER'))
-
-        # списание киберонов
-        try:
-            user_kiberons_db.remain_kiberons_count = str(user_kiberons_count - total_sum)
-            user_kiberons_db.save()
-        except Exception as e:
-            messages.error(request, 'Ошибка при списании киберонов', extra_tags='danger')
             return redirect(request.META.get('HTTP_REFERER'))
 
         # создание заказа
@@ -148,6 +136,17 @@ def make_order(request):
 
             OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, )
 
+        # списание киберонов
+        try:
+            remaining_quantity = user_kiberons_count - total_sum
+            spent_response = spent_client_kiberons(user_in_db.branch.id, client_id, remaining_quantity, note="KIBERSHOP")
+            if not spent_response:
+                message.error(request, "Ошибка при списании киберонов", extra_tags="danger")
+                return redirect(request.META.get("HTTP_REFERER"))
+        except Exception as e:
+            messages.error(request, "Ошибка при списании киберонов", extra_tags="danger")
+            return redirect(request.META.get("HTTP_REFERER"))
+
         # сохранение в таблице
         sheet_url = user_in_db.branch.sheet_url
         room_id = request.session.get("room_id")
@@ -164,7 +163,7 @@ def make_order(request):
         try:
             sheet = client.open_by_url(sheet_url).worksheet(location_sheet_name)
         except Exception as e:
-            print(f"Ошибка при открытии таблицы: {e}")
+            # print(f"Ошибка при открытии таблицы: {e}")
             return False
 
         headers = sheet.row_values(1)
@@ -213,5 +212,3 @@ def profile_page(request):
         'total_quantity': total_quantity,
     }
     return render(request, 'app_kibershop/profile_page.html', context=context)
-
-

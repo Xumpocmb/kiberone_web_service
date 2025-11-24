@@ -15,8 +15,6 @@ from app_api.alfa_crm_service.crm_service import (
     get_client_kiberons,
 )
 from app_kiberclub.models import AppUser, Client, Location
-from app_kibershop.models import ClientKiberons
-
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 

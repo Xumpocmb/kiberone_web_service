@@ -89,21 +89,3 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f'Заказ: {self.id} | Продукт: {self.product.name}'
-
-
-class ClientKiberons(models.Model):
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='kiberons', verbose_name="Клиент")
-    start_kiberons_count = models.CharField(default=0, max_length=5, blank=True, verbose_name="Количество киберонов")
-    remain_kiberons_count = models.CharField(default=0, max_length=5, blank=True, verbose_name="Количество киберонов после заказа")
-
-
-    class Meta:
-        db_table = 'ClientKiberons'
-        verbose_name = 'Кибероны клиента'
-        verbose_name_plural = 'Кибероны клиента'
-
-
-    def __str__(self):
-        return f"{self.client.name} - {self.start_kiberons_count} - {self.remain_kiberons_count}"
-
-

@@ -480,6 +480,26 @@ def set_client_kiberons(branch_id, customer_id, kiberons_from_kiberclub):
         return None
 
 
+def spent_client_kiberons(branch_id, customer_id, count, note=""):
+    try:
+        url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/bonus/bonus-spend?customer_id={customer_id}"
+        data = {
+            "amount": count,
+            "note": note,
+            }
+        response: dict = send_request_to_crm(url=url, data=data, params=None)
+
+        if response:
+            logger.info("Запрос для списания Киберонов успешный")
+            return response
+        else:
+            logger.error(f"Запрос для списания Киберонов не успешный: {response}")
+            return None
+    except Exception as e:
+        logger.error(f"Ошибка при списании Киберонов: {e}")
+        return None
+
+
 def get_client_kiberons(branch_id, customer_id):
     url = f"https://{CRM_HOSTNAME}/v2api/{branch_id}/bonus/balance-bonus?customer_id={customer_id}"
     
