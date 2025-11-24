@@ -4,7 +4,7 @@ from celery import shared_task
 from django.conf import settings
 
 from app_kiberclub.models import Client, AppUser, Location
-from app_api.models import GiftLink
+from app_kiberclub.models import GiftLink
 from django.utils import timezone
 import logging
 import datetime
@@ -301,7 +301,7 @@ def check_client_passed_trial_lessons():
 
                         # Создаем инлайн клавиатуру с кнопкой-ссылкой "Получить подарок"
                         gift_link_obj = GiftLink.objects.first()
-                        gift_link_url = gift_link_obj.url if gift_link_obj else "https://clixtrac.com/goto/?322062"  # fallback на старую ссылку
+                        gift_link_url = gift_link_obj.url if gift_link_obj else "#"  # fallback на старую ссылку
                         inline_keyboard = [[{"text": "Получить подарок", "url": gift_link_url}]]
 
                         try:
