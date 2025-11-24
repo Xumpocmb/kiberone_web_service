@@ -1,5 +1,6 @@
+from app_api.alfa_crm_service.crm_service import get_client_kiberons
 from app_kiberclub.models import Client
-from app_kibershop.models import Cart, Order, ClientKiberons
+from app_kibershop.models import Cart, Order
 
 
 def cart(request):
@@ -28,15 +29,8 @@ def get_user_kiberons(request):
         return {'kiberons': 0}
 
     try:
-        user_kiberons_obj = ClientKiberons.objects.get(client=client)
-    except ClientKiberons.DoesNotExist:
+        user_kiberons_count = get_client_kiberons(client.branch.id, client_id)
+    except Exception as e:
         return {'kiberons': "0"}
 
-    user_orders = Order.objects.filter(user=client)
-
-    if user_orders.exists():
-        if user_kiberons_obj:
-            return {'kiberons': user_kiberons_obj.remain_kiberons_count}
-    else:
-        return {'kiberons': user_kiberons_obj.start_kiberons_count}
-
+    return {"kiberons": user_kiberons_count}
