@@ -9,41 +9,45 @@ from oauth2client.service_account import ServiceAccountCredentials
 from gspread.utils import rowcol_to_a1
 from app_api.alfa_crm_service.crm_service import get_client_kiberons, spent_client_kiberons
 from app_kiberclub.models import Client, Location
-from app_kibershop.models import Category, Product, Cart, Order, OrderItem
+from app_kibershop.models import Category, Product, Cart, Order, OrderItem, OrderAvailabilitySettings
 
 
-CREDENTIALS_FILE = 'kiberone-tg-bot-a43691efe721.json'
+CREDENTIALS_FILE = "kiberone-tg-bot-a43691efe721.json"
 
 
 def catalog_view(request):
     categories = Category.objects.all()
     context = {
-        'categories': categories,
+        "categories": categories,
     }
-    return render(request, 'app_kibershop/catalog.html', context)
+    return render(request, "app_kibershop/catalog.html", context)
 
 
 def cart_view(request):
-    return render(request, 'app_kibershop/cart_page.html')
+    order_settings = OrderAvailabilitySettings.objects.first()
+    context = {
+        "order_settings": order_settings,
+    }
+    return render(request, "app_kibershop/cart_page.html", context)
 
 
 def add_to_cart(request, product_id):
-    user_id = request.session.get('client_id')
+    user_id = request.session.get("client_id")
     if not user_id:
-        messages.error(request, 'Вы не авторизованы', extra_tags='danger')
-        return redirect(request.META.get('HTTP_REFERER'))
+        messages.error(request, "Вы не авторизованы", extra_tags="danger")
+        return redirect(request.META.get("HTTP_REFERER"))
 
     try:
         product = get_object_or_404(Product, id=product_id)
     except Product.DoesNotExist:
-        messages.error(request, 'Товар не найден', extra_tags='danger')
-        return redirect(request.META.get('HTTP_REFERER'))
+        messages.error(request, "Товар не найден", extra_tags="danger")
+        return redirect(request.META.get("HTTP_REFERER"))
 
     try:
         client = get_object_or_404(Client, crm_id=user_id)
     except Client.DoesNotExist:
-        messages.error(request, 'Вы не авторизованы', extra_tags='danger')
-        return redirect(request.META.get('HTTP_REFERER'))
+        messages.error(request, "Вы не авторизованы", extra_tags="danger")
+        return redirect(request.META.get("HTTP_REFERER"))
 
     cart_item, created = Cart.objects.get_or_create(
         user=client,
@@ -54,68 +58,74 @@ def add_to_cart(request, product_id):
         cart_item.quantity += 1
         cart_item.save()
 
-    return redirect(request.META.get('HTTP_REFERER'))
+    return redirect(request.META.get("HTTP_REFERER"))
 
 
 def remove_from_cart(request, cart_id):
     cart_item = Cart.objects.get(id=cart_id)
     cart_item.delete()
-    messages.success(request, 'Товар удален из корзины', extra_tags='success')
-    return redirect(request.META.get('HTTP_REFERER'))
+    messages.success(request, "Товар удален из корзины", extra_tags="success")
+    return redirect(request.META.get("HTTP_REFERER"))
 
 
 def cart_minus(request, cart_id):
     cart_item = Cart.objects.get(id=cart_id)
     if cart_item.quantity == 1:
-        return redirect(request.META.get('HTTP_REFERER'))
+        return redirect(request.META.get("HTTP_REFERER"))
     cart_item.quantity -= 1
     cart_item.save()
-    return redirect(request.META.get('HTTP_REFERER'))
+    return redirect(request.META.get("HTTP_REFERER"))
 
 
 def cart_plus(request, cart_id):
     cart_item = Cart.objects.get(id=cart_id)
     cart_item.quantity += 1
     cart_item.save()
-    return redirect(request.META.get('HTTP_REFERER'))
+    return redirect(request.META.get("HTTP_REFERER"))
 
 
 def make_order(request):
-    if request.method == 'POST':
+    if request.method == "POST":
+
+        # проверка доступности заказов
+        order_settings = OrderAvailabilitySettings.objects.first()
+        if order_settings and not order_settings.is_available:
+            messages.error(request, order_settings.unavailable_message, extra_tags="danger")
+            return redirect(request.META.get("HTTP_REFERER"))
 
         # клиент в бд
         try:
-            client_id = request.session.get('client_id')
+            client_id = request.session.get("client_id")
             if client_id is None:
                 raise ValueError("client_id is not in session")
             user_in_db = Client.objects.filter(crm_id=client_id).first()
         except Client.DoesNotExist:
             messages.error(request, "Клиент не найден.", extra_tags="danger")
-            return redirect(request.META.get('HTTP_REFERER'))
+            return redirect(request.META.get("HTTP_REFERER"))
 
         # кибероны
         try:
             user_kiberons_count = get_client_kiberons(user_in_db.branch.id, client_id)
             if not user_kiberons_count:
                 messages.error(request, "Нам не удалось получить количество ваших киберонов.", extra_tags="danger")
-                return redirect(request.META.get('HTTP_REFERER'))
+                return redirect(request.META.get("HTTP_REFERER"))
         except Exception as e:
             messages.error(request, f"Ошибка при получении заказов пользователя", extra_tags="danger")
-            return redirect(request.META.get('HTTP_REFERER'))
+            return redirect(request.META.get("HTTP_REFERER"))
 
         # общая сумма заказа
         try:
             cart_items = Cart.objects.filter(user=user_in_db)
             if not cart_items.exists():
                 messages.error(request, "Ваша корзина пуста.", extra_tags="danger")
-                return redirect(request.META.get('HTTP_REFERER'))
+                return redirect(request.META.get("HTTP_REFERER"))
             total_sum = cart_items.total_sum()
         except Cart.DoesNotExist as e:
-            return redirect(request.META.get('HTTP_REFERER'))
+            return redirect(request.META.get("HTTP_REFERER"))
 
         if user_kiberons_count < total_sum:
-            messages.error(request, 'Недостаточно киберонов', extra_tags='danger')
-            return redirect(request.META.get('HTTP_REFERER'))
+            messages.error(request, "Недостаточно киберонов", extra_tags="danger")
+            return redirect(request.META.get("HTTP_REFERER"))
 
         # создание заказа
         order = Order.objects.create(user=user_in_db)
@@ -124,8 +134,8 @@ def make_order(request):
             product_in_db = Product.objects.get(id=item.product.id)
 
             if product_in_db.quantity_in_stock < item.quantity:
-                messages.error(request, f'Недостаточно товара на складе: {product_in_db.name}', extra_tags='danger')
-                return redirect(request.META.get('HTTP_REFERER'))
+                messages.error(request, f"Недостаточно товара на складе: {product_in_db.name}", extra_tags="danger")
+                return redirect(request.META.get("HTTP_REFERER"))
 
             if product_in_db.quantity_in_stock - item.quantity == 0:
                 product_in_db.quantity_in_stock -= item.quantity
@@ -134,7 +144,11 @@ def make_order(request):
                 product_in_db.quantity_in_stock -= item.quantity
             product_in_db.save()
 
-            OrderItem.objects.create(order=order, product=item.product, quantity=item.quantity, )
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                quantity=item.quantity,
+            )
 
         # списание киберонов
         try:
@@ -197,18 +211,18 @@ def make_order(request):
         Cart.objects.filter(user=user_in_db).delete()
         messages.success(request, "Заказ успешно создан!", extra_tags="success")
         return redirect("app_kibershop:profile_page")
-    return redirect(request.META.get('HTTP_REFERER'))
+    return redirect(request.META.get("HTTP_REFERER"))
 
 
 def profile_page(request):
-    orders = Order.objects.filter(user=Client.objects.get(crm_id=request.session.get('client_id')))
+    orders = Order.objects.filter(user=Client.objects.get(crm_id=request.session.get("client_id")))
     order_items = OrderItem.objects.filter(order__in=orders)
-    total_sum = order_items.aggregate(total_sum=Sum(F('product__price') * F('quantity')))['total_sum'] or 0
-    total_quantity = order_items.aggregate(total_quantity=Sum('quantity'))['total_quantity'] or 0
+    total_sum = order_items.aggregate(total_sum=Sum(F("product__price") * F("quantity")))["total_sum"] or 0
+    total_quantity = order_items.aggregate(total_quantity=Sum("quantity"))["total_quantity"] or 0
 
     context = {
-        'order_items': order_items,
-        'total_sum': total_sum,
-        'total_quantity': total_quantity,
+        "order_items": order_items,
+        "total_sum": total_sum,
+        "total_quantity": total_quantity,
     }
-    return render(request, 'app_kibershop/profile_page.html', context=context)
+    return render(request, "app_kibershop/profile_page.html", context=context)

@@ -59,6 +59,12 @@
 
     </section>
     {% endif %}
+    
+    {% if order_settings and not order_settings.is_available %}
+    <div class="order-unavailable-message">
+        <p>{{ order_settings.unavailable_message }}</p>
+    </div>
+    {% endif %}
     <script>
         function changeButtonText() {
             const button = document.getElementById("fullOrderButton");
