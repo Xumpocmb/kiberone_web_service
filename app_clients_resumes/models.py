@@ -38,6 +38,7 @@ class Resume(models.Model):
         permissions = [
             ("can_verify_resume", "Может отмечать резюме как проверенное"),
         ]
+        unique_together = ('student_crm_id', 'content')
 
     def __str__(self):
         return f"Резюме ученика {self.student_crm_id}"

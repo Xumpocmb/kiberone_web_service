@@ -487,9 +487,8 @@ class ResumeUpdateView(APIView):
         """
         try:
             # Получаем резюме по ID
-            try:
-                resume = Resume.objects.get(id=resume_id)
-            except Resume.DoesNotExist:
+            resume = Resume.objects.filter(id=resume_id).first()
+            if not resume:
                 return Response({
                     "success": False,
                     "message": f"Резюме с ID {resume_id} не найдено"
@@ -601,9 +600,8 @@ class ResumeVerifyView(APIView):
                 return Response({"error": "Доступ запрещен. Требуется статус старшего тьютора."}, status=status.HTTP_403_FORBIDDEN)
 
             # Получаем резюме по ID
-            try:
-                resume = Resume.objects.get(id=resume_id)
-            except Resume.DoesNotExist:
+            resume = Resume.objects.filter(id=resume_id).first()
+            if not resume:
                 return Response({
                     "success": False,
                     "message": f"Резюме с ID {resume_id} не найдено"
@@ -1023,9 +1021,8 @@ class ResumeDeleteView(APIView):
            Response: JSON ответ с результатом операции
        """
        try:
-           try:
-               resume = Resume.objects.get(id=resume_id)
-           except Resume.DoesNotExist:
+           resume = Resume.objects.filter(id=resume_id).first()
+           if not resume:
                return Response({
                    "success": False,
                    "message": f"Резюме с ID {resume_id} не найдено"
