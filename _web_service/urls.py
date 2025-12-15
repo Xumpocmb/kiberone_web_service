@@ -26,7 +26,6 @@ urlpatterns = [
     path("", include("app_home.urls")),
     path("webapp/", include("app_kiberclub.urls")),
     path("api/", include("app_api.urls")),
-    path("api/clients_resumes/", include("app_clients_resumes.urls")),
     path("kibershop/", include("app_kibershop.urls")),
     path("users/", include("app_users.urls")),
     # Swagger URLs

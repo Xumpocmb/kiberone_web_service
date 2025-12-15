@@ -117,7 +117,6 @@ INSTALLED_APPS = [
     "app_api",
     "app_kiberclub",
     "app_kibershop.apps.AppKibershopConfig",
-    "app_clients_resumes",
     "app_users",
     "app_home",
     # CORS
@@ -199,7 +198,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 if DEBUG:
-    STATICFILES_DIRS = [BASE_DIR / "static", BASE_DIR / "templates/app_clients_resumes/build/static", BASE_DIR / "templates/app_clients_resumes/build"]
+    STATICFILES_DIRS = [BASE_DIR / "static"]
 else:
     STATIC_ROOT = BASE_DIR / "static"
 

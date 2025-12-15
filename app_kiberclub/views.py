@@ -151,27 +151,21 @@ def open_profile(request):
                 request.session["room_id"] = room_id
 
                 location = Location.objects.filter(location_crm_id=room_id).first()
-                if location:
-                    location_sheet_name = location.sheet_name
-                    logger.debug(
-                        f"Локация найдена: {location.name}, sheet_name: {location_sheet_name}"
-                    )
+                
 
-                    client_resume = get_resume_from_google_sheet(
-                        client.branch.sheet_url, location_sheet_name, client.crm_id
-                    )
-                    logger.debug(f"Резюме клиента: {client_resume}")
+                client_resume = get_client_resume(client.crm_id)
+                logger.debug(f"Резюме клиента: {client_resume}")
 
-                    context["client"].update(
-                        {
-                            "location_name": location.name,
-                            "lesson_name": lesson_name if lesson_name else "",
-                            "resume": (
-                                client_resume if client_resume else "Появится позже"
-                            ),
-                            "room_id": room_id,
-                        }
-                    )
+                context["client"].update(
+                    {
+                        "location_name": location.name,
+                        "lesson_name": lesson_name if lesson_name else "",
+                        "resume": (
+                            client_resume if client_resume else "Появится позже"
+                        ),
+                        "room_id": room_id,
+                    }
+                )
 
                 kiberons = get_client_kiberons(branch_id, client.crm_id)
 
@@ -197,189 +191,52 @@ def error_page_view(request):
     return render(request, "app_kiberclub/error_page.html")
 
 
-def get_resume_from_google_sheet(sheet_url: str, sheet_name: str, child_id: str):
+def get_client_resume(child_id: str) -> str:
     """
-    Загружает резюме ребенка из Google Таблицы.
+    Получение резюме по API
     """
-    credentials_path = CREDENTIALS_FILE
-
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(
-        credentials_path, scope
-    )
-    client = gspread.authorize(credentials)
 
     try:
-        sheet = client.open_by_url(sheet_url).worksheet(sheet_name)
-    except Exception as e:
-        logger.error(f"Не удалось открыть лист {sheet_name} в таблице {sheet_url}: {e}")
-        return "Появится позже"
+        url = f"https://kiber-resume.of.by/api/app_resumes/resumes/latest-verified/"
+        params = {"student_crm_id": child_id}
+        response: HttpResponse = requests.get(url=url, params=params, timeout=5)
 
-    try:
-        # Получаем все значения в виде списка списков
-        all_values = sheet.get_all_values()
-
-        if len(all_values) < 2:
-            logger.warning("Таблица пустая или содержит только заголовки")
-            return "Появится позже"
-
-        headers = all_values[0]
-        data_rows = all_values[1:]
-
-        # Находим индексы нужных колонок
-        try:
-            id_col_index = headers.index("ID ребенка")
-        except ValueError:
-            logger.error("В таблице нет столбца 'ID ребенка'")
-            return "Появится позже"
-
-        try:
-            resume_col_index = headers.index("Промежуточное резюме октябрь 25")
-        except ValueError:
-            logger.error("В таблице нет столбца 'Промежуточное резюме октябрь 25'")
-            return "Появится позже"
-
-        # Поиск нужной строки
-        for row in data_rows:
-            if len(row) > max(id_col_index, resume_col_index) and str(
-                row[id_col_index]
-            ) == str(child_id):
-                resume = row[resume_col_index].strip()
-                return resume or "Появится позже"
-
-        logger.info(f"Ребенок с ID {child_id} не найден в таблице.")
-        return "Появится позже"
+        if response.status_code == 200:
+            resume_content: str = response.json()["content"]
+            return resume_content if resume_content else "Появится позже"
+        else:
+            raise 
 
     except Exception as e:
-        logger.exception(f"Ошибка при чтении данных из таблицы: {e}")
+        logger.exception(f"Ошибка при запросе: {e}")
         return "Появится позже"
 
 
-def save_review_from_page(request):
+def save_review_from_page(request) -> bool:
     if request.method == "POST":
         crm_id = request.POST.get("crm_id")
-        room_id = request.POST.get("room_id")
         feedback = request.POST.get("feedbackInput")
 
-        client = get_object_or_404(Client, crm_id=crm_id)
-        location = Location.objects.filter(location_crm_id=room_id).first()
-        location_sheet_name = location.sheet_name
+        url = "https://kiber-resume.of.by/api/app_resumes/reviews/"
+        data = {"student_crm_id": crm_id, "content": feedback}
 
-        success = save_review_to_google_sheet(
-            sheet_url=client.branch.sheet_url,
-            sheet_name=location_sheet_name,
-            child_id=client.crm_id,
-            feedback=f"{datetime.now().strftime("%Y-%m-%d")}\n{feedback}\n",
-        )
-        if success:
-            return JsonResponse(
-                {"status": "success", "message": "Ваш отзыв сохранен!"}, status=200
-            )
+        response: HttpResponse = requests.post(url=url, data=data, timeout=5)
+        if response.status_code == 200:
+            return True
         else:
-            return JsonResponse(
-                {
-                    "status": "error",
-                    "message": "Произошла ошибка при сохранении отзыва",
-                },
-                status=400,
-            )
-
-
-def save_review_to_google_sheet(sheet_url: str, sheet_name: str, child_id: str, feedback: str):
-    """
-    Сохраняет отзыв родителя в Google Таблицу.
-    """
-    logger.debug("Начало выполнения функции save_review_to_google_sheet")
-    credentials_path = CREDENTIALS_FILE
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    logger.debug(f"Загрузка учетных данных из файла: {credentials_path}")
-
-    try:
-        credentials = ServiceAccountCredentials.from_json_keyfile_name(
-            credentials_path, scope
-        )
-        client = gspread.authorize(credentials)
-    except Exception as e:
-        logger.error(f"Ошибка при загрузке учетных данных: {e}", exc_info=True)
-        return False
-
-    try:
-        logger.debug(f"Открытие таблицы по URL: {sheet_url}, лист: {sheet_name}")
-        sheet = client.open_by_url(sheet_url).worksheet(sheet_name)
-    except Exception as e:
-        logger.error(f"Ошибка при открытии таблицы или листа: {e}", exc_info=True)
-        return False
-
-    logger.debug("Получение заголовков таблицы")
-    headers = sheet.row_values(1)
-
-    try:
-        logger.debug("Поиск индекса столбца 'Отзыв родителя'")
-        feedback_column_index = headers.index("Отзыв родителя") + 1
-    except ValueError as e:
-        logger.warning("Столбец 'Отзыв родителя' не найден в таблице")
-        return False
-
-    logger.debug("Получение всех записей из таблицы")
-    data = sheet.get_all_records()
-
-    logger.debug(f"Поиск ребенка с ID: {child_id} в таблице")
-    for index, row in enumerate(data, start=2):
-        if str(row.get("ID ребенка")) == str(child_id):
-            logger.debug(
-                f"Ребенок найден. Строка: {index - 1} (нумерация с 2), ID: {child_id}"
-            )
-
-            try:
-                feedback = str(feedback).strip()
-                if not feedback:
-                    logger.warning("Отзыв пустой. Пропускаем обновление.")
-                    return False
-
-                logger.debug(
-                    f"Получение текущего отзыва из ячейки: строка {index}, столбец {feedback_column_index}"
-                )
-                cell = sheet.cell(index, feedback_column_index)
-                existing_feedback = cell.value or ""
-                updated_feedback = f"{existing_feedback}\n{feedback}".strip()
-
-                logger.debug(
-                    f"Обновление ячейки: строка {index}, столбец {feedback_column_index}, новый отзыв: {updated_feedback}"
-                )
-                sheet.update_cell(index, feedback_column_index, updated_feedback)
-
-                logger.info(f"Отзыв успешно обновлен для ребенка с ID {child_id}")
-                return True
-            except Exception as e:
-                logger.exception(f"Ошибка при обновлении отзыва: {e}")
-                return False
-
-    logger.warning(f"Ребенок с ID {child_id} не найден в таблице")
-    return False
+            return False
 
 
 def get_portfolio_link(client_name) -> str | None:
     SCOPES = ["https://www.googleapis.com/auth/drive "]
     CREDENTIALS_FILE = "portfolio-credentials.json"
-    credentials = service_account.Credentials.from_service_account_file(
-        CREDENTIALS_FILE, scopes=SCOPES
-    )
+    credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
 
     drive_service = build("drive", "v3", credentials=credentials)
 
     client_name = " ".join(client_name.split(" ")[:2])
     query = f"name contains '{client_name}' and mimeType='application/vnd.google-apps.folder'"
-    results = (
-        drive_service.files()
-        .list(q=query, fields="nextPageToken, files(id, name, mimeType)")
-        .execute()
-    )
+    results = drive_service.files().list(q=query, fields="nextPageToken, files(id, name, mimeType)").execute()
 
     folders = results.get("files", [])
     if not folders:
