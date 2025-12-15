@@ -40,9 +40,7 @@ def index(request: HttpRequest) -> HttpResponse:
         else:
             telegram_id_from_req = request.session.get("tg_id")
             if not telegram_id_from_req:
-                logger.warning(
-                    "tg_id отсутствует в сессии и запросе. Перенаправление на страницу ошибки."
-                )
+                logger.warning("tg_id отсутствует в сессии и запросе. Перенаправление на страницу ошибки.")
                 return redirect("app_kiberclub:error_page")
 
         bot_user = get_object_or_404(AppUser, telegram_id=telegram_id_from_req)
@@ -96,22 +94,12 @@ def open_profile(request):
                 "dob": client.dob.strftime("%d.%m.%Y") if client.dob else "Не указано",
                 "balance": client.balance,
                 "paid_count": client.paid_lesson_count,
-                "next_lesson_date": (
-                    client.next_lesson_date.strftime("%d.%m.%Y")
-                    if client.next_lesson_date
-                    else "Нет запланированных уроков"
-                ),
-                "paid_till": (
-                    client.paid_till.strftime("%d.%m.%Y")
-                    if client.paid_till
-                    else "Не указано"
-                ),
+                "next_lesson_date": (client.next_lesson_date.strftime("%d.%m.%Y") if client.next_lesson_date else "Нет запланированных уроков"),
+                "paid_till": (client.paid_till.strftime("%d.%m.%Y") if client.paid_till else "Не указано"),
                 "note": client.note or "Нет заметок",
                 "branch": client.branch.name if client.branch else "Не указано",
                 "is_study": "Да" if client.is_study else "Нет",
-                "has_scheduled_lessons": (
-                    "Да" if client.has_scheduled_lessons else "Нет"
-                ),
+                "has_scheduled_lessons": ("Да" if client.has_scheduled_lessons else "Нет"),
             },
         }
 
@@ -122,12 +110,8 @@ def open_profile(request):
         branch_id = int(client.branch.branch_id)
         logger.debug(f"Определён branch_id: {branch_id}")
 
-        lessons_data = get_client_lessons(
-            client_id, branch_id, lesson_status=1, lesson_type=2
-        )
-        logger.debug(
-            f"Получены данные об уроках для клиента {client_id}: {lessons_data}"
-        )
+        lessons_data = get_client_lessons(client_id, branch_id, lesson_status=1, lesson_type=2)
+        logger.debug(f"Получены данные об уроках для клиента {client_id}: {lessons_data}")
 
         if lessons_data and int(lessons_data.get("total", 0)) > 0:
             lesson = lessons_data.get("items", [])[-1]
@@ -151,7 +135,6 @@ def open_profile(request):
                 request.session["room_id"] = room_id
 
                 location = Location.objects.filter(location_crm_id=room_id).first()
-                
 
                 client_resume = get_client_resume(client.crm_id)
                 logger.debug(f"Резюме клиента: {client_resume}")
@@ -160,9 +143,7 @@ def open_profile(request):
                     {
                         "location_name": location.name,
                         "lesson_name": lesson_name if lesson_name else "",
-                        "resume": (
-                            client_resume if client_resume else "Появится позже"
-                        ),
+                        "resume": (client_resume if client_resume else "Появится позже"),
                         "room_id": room_id,
                     }
                 )
@@ -195,36 +176,64 @@ def get_client_resume(child_id: str) -> str:
     """
     Получение резюме по API
     """
-
     try:
         url = f"https://kiber-resume.of.by/api/app_resumes/resumes/latest-verified/"
         params = {"student_crm_id": child_id}
         response: HttpResponse = requests.get(url=url, params=params, timeout=5)
 
         if response.status_code == 200:
-            resume_content: str = response.json()["content"]
+            data = response.json()
+            resume_content: str = data.get("content", "")
             return resume_content if resume_content else "Появится позже"
         else:
-            raise 
+            logger.warning(f"Получен статус {response.status_code} при запросе резюме для клиента {child_id}")
+            return "Появится позже"
 
+    except requests.exceptions.RequestException as e:
+        logger.exception(f"Ошибка сети при запросе резюме для клиента {child_id}: {e}")
+        return "Появится позже"
+    except KeyError as e:
+        logger.exception(f"Отсутствует ожидаемое поле в ответе API для клиента {child_id}: {e}")
+        return "Появится позже"
     except Exception as e:
-        logger.exception(f"Ошибка при запросе: {e}")
+        logger.exception(f"Неожиданная ошибка при запросе резюме для клиента {child_id}: {e}")
         return "Появится позже"
 
 
 def save_review_from_page(request) -> bool:
-    if request.method == "POST":
+    """
+    Сохранение отзыва по API
+    """
+    if request.method != "POST":
+        logger.warning("Попытка вызвать save_review_from_page с методом, отличным от POST")
+        return False
+
+    try:
         crm_id = request.POST.get("crm_id")
         feedback = request.POST.get("feedbackInput")
+
+        if not crm_id or not feedback:
+            logger.warning(f"Отсутствуют необходимые параметры: crm_id={bool(crm_id)}, feedback={bool(feedback)}")
+            return False
 
         url = "https://kiber-resume.of.by/api/app_resumes/reviews/"
         data = {"student_crm_id": crm_id, "content": feedback}
 
         response: HttpResponse = requests.post(url=url, data=data, timeout=5)
-        if response.status_code == 200:
+
+        if response.status_code == 200 or response.status_code == 201:
+            logger.info(f"Отзыв успешно сохранен для клиента {crm_id}")
             return True
         else:
+            logger.warning(f"Получен статус {response.status_code} при сохранении отзыва для клиента {crm_id}")
             return False
+
+    except requests.exceptions.RequestException as e:
+        logger.exception(f"Ошибка сети при отправке отзыва для клиента {crm_id}: {e}")
+        return False
+    except Exception as e:
+        logger.exception(f"Неожиданная ошибка при сохранении отзыва: {e}")
+        return False
 
 
 def get_portfolio_link(client_name) -> str | None:
