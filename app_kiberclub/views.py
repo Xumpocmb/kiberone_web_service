@@ -216,7 +216,7 @@ def save_review_from_page(request):
             logger.warning(f"Отсутствуют необходимые параметры: crm_id={bool(crm_id)}, feedback={bool(feedback)}")
             return JsonResponse({"status": "error", "message": "Отсутствуют необходимые параметры"}, status=400)
 
-        url = "https://kiber-resume.of.by/api/app_resumes/reviews/"
+        url = "https://kiber-resume.of.by/api/reviews/"
         data = {"student_crm_id": crm_id, "content": feedback}
 
         response: HttpResponse = requests.post(url=url, data=data, timeout=5)
