@@ -200,13 +200,13 @@ def get_client_resume(child_id: str) -> str:
         return "Появится позже"
 
 
-def save_review_from_page(request) -> bool:
+def save_review_from_page(request):
     """
     Сохранение отзыва по API
     """
     if request.method != "POST":
         logger.warning("Попытка вызвать save_review_from_page с методом, отличным от POST")
-        return False
+        return JsonResponse({"status": "error", "message": "Метод не поддерживается"}, status=405)
 
     try:
         crm_id = request.POST.get("crm_id")
@@ -214,26 +214,26 @@ def save_review_from_page(request) -> bool:
 
         if not crm_id or not feedback:
             logger.warning(f"Отсутствуют необходимые параметры: crm_id={bool(crm_id)}, feedback={bool(feedback)}")
-            return False
+            return JsonResponse({"status": "error", "message": "Отсутствуют необходимые параметры"}, status=400)
 
-        url = "https://kiber-resume.of.by/api/reviews/"
+        url = "https://kiber-resume.of.by/api/app_resumes/reviews/"
         data = {"student_crm_id": crm_id, "content": feedback}
 
         response: HttpResponse = requests.post(url=url, data=data, timeout=5)
 
         if response.status_code == 200 or response.status_code == 201:
             logger.info(f"Отзыв успешно сохранен для клиента {crm_id}")
-            return True
+            return JsonResponse({"status": "success", "message": "Отзыв успешно сохранен"})
         else:
             logger.warning(f"Получен статус {response.status_code} при сохранении отзыва для клиента {crm_id}")
-            return False
+            return JsonResponse({"status": "error", "message": "Ошибка при сохранении отзыва"}, status=400)
 
     except requests.exceptions.RequestException as e:
         logger.exception(f"Ошибка сети при отправке отзыва для клиента {crm_id}: {e}")
-        return False
+        return JsonResponse({"status": "error", "message": "Ошибка сети"}, status=500)
     except Exception as e:
         logger.exception(f"Неожиданная ошибка при сохранении отзыва: {e}")
-        return False
+        return JsonResponse({"status": "error", "message": "Внутренняя ошибка сервера"}, status=500)
 
 
 def get_portfolio_link(client_name) -> str | None:

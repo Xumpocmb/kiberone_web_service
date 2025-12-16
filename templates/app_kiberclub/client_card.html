@@ -79,10 +79,11 @@
     function submitReview() {
         let formData = new FormData(document.getElementById('feedbackForm'));
         let button = document.getElementById('sendButton');
+        let messageElement = document.getElementById('message');
 
-        console.log('Button before change:', button.innerText);
+        // Блокируем кнопку и меняем текст во время отправки
+        button.disabled = true;
         button.innerText = 'Отправка...';
-        console.log('Button after change:', button.innerText);
 
         fetch('{% url 'app_kiberclub:save_review_from_page' %}', {
             method: 'POST',
@@ -91,17 +92,35 @@
                 'X-CSRFToken': '{{ csrf_token }}'
             }
         })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        document.getElementById('message').innerText = data.message;
-                        button.innerText = 'Отправить';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    button.innerText = 'Отправить';
-                });
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Показываем сообщение об успехе
+                messageElement.innerText = data.message;
+                messageElement.style.color = '#4CAF50'; // зеленый цвет для успеха
+                
+                // Очищаем поле ввода
+                document.getElementById('feedbackInput').value = '';
+                
+                // Возвращаем первоначальный текст кнопки
+                button.innerText = 'Отправить';
+                button.disabled = false;
+            } else {
+                // Показываем сообщение об ошибке
+                messageElement.innerText = data.message || 'Произошла ошибка при отправке отзыва';
+                messageElement.style.color = '#f44336'; // красный цвет для ошибки
+                button.innerText = 'Отправить';
+                button.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Показываем сообщение об ошибке в случае проблем с сетью или другими ошибками
+            messageElement.innerText = 'Произошла ошибка при отправке отзыва';
+            messageElement.style.color = '#f44336'; // красный цвет для ошибки
+            button.innerText = 'Отправить';
+            button.disabled = false;
+        });
     }
 </script>
 </html>
