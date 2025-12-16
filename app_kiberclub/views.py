@@ -177,7 +177,7 @@ def get_client_resume(child_id: str) -> str:
     Получение резюме по API
     """
     try:
-        url = f"https://kiber-resume.of.by/api/app_resumes/resumes/latest-verified/"
+        url = f"https://kiber-resume.of.by/api/resumes/latest-verified/"
         params = {"student_crm_id": child_id}
         response: HttpResponse = requests.get(url=url, params=params, timeout=5)
 
