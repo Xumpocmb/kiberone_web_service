@@ -8,7 +8,11 @@ from rest_framework.decorators import api_view
 from app_api.alfa_crm_service.crm_service import (
     find_user_by_phone,
     create_user_in_crm,
-    get_client_lessons, get_user_groups_from_crm, get_group_link_from_crm, find_client_by_id, get_manager_from_crm
+    get_client_lessons,
+    get_user_groups_from_crm,
+    get_group_link_from_crm,
+    find_client_by_id,
+    get_manager_from_crm,
 )
 from rest_framework import status
 from rest_framework.response import Response
@@ -108,10 +112,7 @@ def find_user_in_db_view(request) -> Response:
                 status=status.HTTP_200_OK,
             )
         else:
-            return Response(
-                {"success": False, "message": "Пользователь не найден"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            return Response({"success": False, "message": "Пользователь не найден"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response(
             {"success": False, "message": f"Ошибка при поиске пользователя: {str(e)}"},
@@ -264,9 +265,7 @@ def create_or_update_clients_in_db_view(request) -> Response:
         crm_ids_to_delete: set = existing_crm_ids - crm_ids
         deleted_count: int = 0
         if crm_ids_to_delete:
-            deleted_count = Client.objects.filter(
-                crm_id__in=crm_ids_to_delete
-            ).delete()[0]
+            deleted_count = Client.objects.filter(crm_id__in=crm_ids_to_delete).delete()[0]
             logger.info(f"Удалено клиентов: {deleted_count}")
 
         # создание и обновление клиентов
@@ -484,6 +483,7 @@ def get_partner_by_id_view(request, partner_id: int) -> Response:
             "description": partner.description,
             "code": partner.code,
             "category": partner.category.id,
+            "image": partner.image.url if partner.image else None,
         }
         logger.info(f"Информация о партнере {partner_id} успешно получена.")
         return Response(
@@ -630,9 +630,7 @@ def get_user_lessons_view(request) -> Response:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        lessons_data = get_client_lessons(
-            user_crm_id, branch_id, lesson_status=lesson_status, lesson_type=lesson_type
-        )
+        lessons_data = get_client_lessons(user_crm_id, branch_id, lesson_status=lesson_status, lesson_type=lesson_type)
         if lessons_data and lessons_data.get("total", 0) > 0:
             return Response(
                 {"success": True, "data": lessons_data},
@@ -666,11 +664,7 @@ def get_location_by_id(request, location_id: int):
         # Получаем данные менеджера, если он есть
         manager_data = None
         if location.location_manager:
-            manager_data = {
-                "id": location.location_manager.id,
-                "name": location.location_manager.name,
-                "telegram_link": location.location_manager.telegram_link
-            }
+            manager_data = {"id": location.location_manager.id, "name": location.location_manager.name, "telegram_link": location.location_manager.telegram_link}
 
         data = {
             "id": location.id,
@@ -727,7 +721,7 @@ def get_manager(request, branch_id, user_crm_id):
                     )
 
             curr_page += 1
-        
+
         # Если прошли все страницы и не нашли менеджера
         return Response(
             {"success": False, "message": "Менеджер с ID {} не найден.".format(client_assigned_id)},
@@ -883,10 +877,11 @@ def get_user_tg_links(request) -> Response:
         group_tg_links: list = []
         for client in clients:
             user_groups_data: dict = get_user_groups_from_crm(client.branch_id, client.crm_id)
-            if user_groups_data.get('total', 0) > 0:
+            if user_groups_data.get("total", 0) > 0:
                 from datetime import datetime
+
                 current_date = datetime.now().date()
-                
+
                 for group_item in user_groups_data["items"]:
                     # Проверяем актуальность участия ученика в группе по дате окончания обучения
                     e_date_str = group_item.get("e_date")
@@ -899,10 +894,10 @@ def get_user_tg_links(request) -> Response:
                         except (ValueError, TypeError):
                             # Если не удалось преобразовать дату, считаем группу актуальной
                             pass
-                    
+
                     group_id = group_item["group_id"]
                     group_link_data = get_group_link_from_crm(client.branch_id, group_id)
-                    if group_link_data.get('total', 0) > 0:
+                    if group_link_data.get("total", 0) > 0:
                         group_tg_link = group_link_data.get("items", [])[0].get("note", None)
                         if group_tg_link and group_tg_link not in group_tg_links:
                             group_tg_links.append(group_tg_link)
@@ -918,17 +913,17 @@ def get_user_tg_links(request) -> Response:
 def find_client_by_id_view(request) -> Response:
     """
     Получение данных клиентов из CRM по Telegram ID пользователя.
-    
+
     Эта функция выполняет следующие действия:
     1. Проверяет наличие user_id (Telegram ID) в запросе
     2. Находит пользователя (AppUser) по указанному Telegram ID
     3. Получает список всех клиентов (детей), связанных с этим пользователем
     4. Для каждого клиента запрашивает актуальные данные из CRM системы
     5. Формирует и возвращает результаты в виде JSON-ответа
-    
+
     Параметры запроса:
     - user_id (str): Telegram ID пользователя (обязательный параметр)
-    
+
     Возвращает:
     - Response: JSON-ответ со следующей структурой:
       - success (bool): Статус выполнения запроса
@@ -936,13 +931,13 @@ def find_client_by_id_view(request) -> Response:
         - client_crm_id (str): ID клиента в CRM системе
         - data (dict): Данные клиента из CRM или
         - error (str): Сообщение об ошибке, если данные не удалось получить
-    
+
     Коды ответа:
     - 200 OK: Запрос выполнен успешно
     - 400 Bad Request: Отсутствует обязательный параметр user_id
     - 404 Not Found: Пользователь не найден или у пользователя нет клиентов
     - 500 Internal Server Error: Внутренняя ошибка сервера
-    
+
     Пример успешного ответа:
     {
         "success": true,
@@ -957,13 +952,13 @@ def find_client_by_id_view(request) -> Response:
             }
         ]
     }
-    
+
     Пример ответа с ошибкой:
     {
         "success": false,
         "message": "Пользователь не найден"
     }
-    
+
     Зависимости:
     - find_client_by_id: Функция для получения данных клиента из CRM по ID
     - AppUser: Модель пользователя (родителя)
@@ -999,17 +994,11 @@ def find_client_by_id_view(request) -> Response:
             else:
                 results.append({"client_crm_id": client.crm_id, "error": "Не удалось получить данные"})
 
-        return Response({
-            "success": True,
-            "results": results
-        }, status=status.HTTP_200_OK)
+        return Response({"success": True, "results": results}, status=status.HTTP_200_OK)
 
     except Exception as e:
         logger.exception(f"Ошибка при поиске клиента: {e}")
-        return Response(
-            {"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
+        return Response({"success": False, "message": f"Внутренняя ошибка сервера: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["POST"])
@@ -1052,7 +1041,7 @@ def telegram_callback_handler(request) -> Response:
 
             # Путь к PDF файлу
             pdf_path = os.path.join(settings.BASE_DIR, "static", "files", "Roblox_animation_guide.pdf")
-            
+
             if not os.path.exists(pdf_path):
                 logger.error(f"PDF файл не найден: {pdf_path}")
                 return Response(
@@ -1061,11 +1050,7 @@ def telegram_callback_handler(request) -> Response:
                 )
 
             # Отправляем PDF файл пользователю
-            result = send_telegram_document(
-                chat_id=chat_id,
-                file_path=pdf_path,
-                caption="🎁 Ваш подарок - руководство по анимации в Roblox!"
-            )
+            result = send_telegram_document(chat_id=chat_id, file_path=pdf_path, caption="🎁 Ваш подарок - руководство по анимации в Roblox!")
 
             if result:
                 # Отмечаем, что пользователь получил подарок

@@ -259,4 +259,4 @@ def get_orders_list(request):
 
         orders_data.append(order_data)
 
-    return JsonResponse({"orders": orders_data, "count": len(orders_data)})
+    return JsonResponse({"orders": orders_data, "count": len(orders_data)}, json_dumps_params={"ensure_ascii": False})

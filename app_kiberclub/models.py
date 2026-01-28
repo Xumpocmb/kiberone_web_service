@@ -79,9 +79,7 @@ class Location(models.Model):
         null=True,
         verbose_name="Название листа в таблице",
     )
-    map_url = models.CharField(
-        max_length=100, blank=True, null=True, verbose_name="Ссылка на карту"
-    )
+    map_url = models.CharField(max_length=100, blank=True, null=True, verbose_name="Ссылка на карту")
     location_manager = models.ForeignKey(
         Manager,
         on_delete=models.SET_NULL,
@@ -111,16 +109,10 @@ class AppUser(models.Model):
         ("2", "Client"),
     )
 
-    status = models.CharField(
-        choices=CLIENT_STATUS, default="0", max_length=5, verbose_name="Статус клиента"
-    )
+    status = models.CharField(choices=CLIENT_STATUS, default="0", max_length=5, verbose_name="Статус клиента")
 
-    telegram_id = models.CharField(
-        max_length=100, unique=True, blank=True, null=True, verbose_name="Телеграм ID"
-    )
-    username = models.CharField(
-        max_length=100, unique=False, blank=True, null=True, verbose_name="Username"
-    )
+    telegram_id = models.CharField(max_length=100, unique=True, blank=True, null=True, verbose_name="Телеграм ID")
+    username = models.CharField(max_length=100, unique=False, blank=True, null=True, verbose_name="Username")
     phone_number = models.CharField(
         max_length=100,
         unique=False,
@@ -152,28 +144,21 @@ class Client(models.Model):
         blank=True,
     )
     name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Имя")
-    branch = models.ForeignKey(
-        "Branch", on_delete=models.CASCADE, verbose_name="Филиал"
-    )
-    crm_id = models.CharField(
-        max_length=100, blank=True, null=True, verbose_name="ID в CRM"
-    )
+    branch = models.ForeignKey("Branch", on_delete=models.CASCADE, verbose_name="Филиал")
+    crm_id = models.CharField(max_length=100, blank=True, null=True, verbose_name="ID в CRM")
 
     is_study = models.BooleanField(default=False, verbose_name="Является клиентом")
     dob = models.DateField(blank=True, null=True, verbose_name="Дата рождения")
-    balance = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Баланс"
-    )
-    next_lesson_date = models.DateTimeField(
-        blank=True, null=True, verbose_name="Дата следующего занятия"
-    )
+    balance = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, verbose_name="Баланс")
+    next_lesson_date = models.DateTimeField(blank=True, null=True, verbose_name="Дата следующего занятия")
     paid_till = models.DateField(blank=True, null=True, verbose_name="Оплачено до")
     note = models.TextField(blank=True, null=True, verbose_name="Примечание")
-    paid_lesson_count = models.IntegerField(
-        blank=True, null=True, verbose_name="Количество оплаченных занятий"
-    )
+    paid_lesson_count = models.IntegerField(blank=True, null=True, verbose_name="Количество оплаченных занятий")
     has_scheduled_lessons = models.BooleanField(
-        default=False, verbose_name="Есть запланированные уроки", null=True, blank=True,
+        default=False,
+        verbose_name="Есть запланированные уроки",
+        null=True,
+        blank=True,
     )
 
     def __str__(self):
@@ -187,9 +172,7 @@ class Client(models.Model):
 
 class SalesManager(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True, verbose_name="Имя")
-    telegram_link = models.CharField(
-        max_length=100, unique=True, blank=True, null=True, verbose_name="Телеграм ссылка"
-    )
+    telegram_link = models.CharField(max_length=100, unique=True, blank=True, null=True, verbose_name="Телеграм ссылка")
 
     class Meta:
         db_table = "sales_managers"
@@ -201,9 +184,7 @@ class SalesManager(models.Model):
 
 
 class QuestionsAnswers(models.Model):
-    question = models.CharField(
-        max_length=255, blank=True, null=True, verbose_name="Вопрос"
-    )
+    question = models.CharField(max_length=255, blank=True, null=True, verbose_name="Вопрос")
     answer = models.CharField(blank=True, null=True, verbose_name="Ответ")
 
     class Meta:
@@ -216,10 +197,8 @@ class QuestionsAnswers(models.Model):
 
 
 class EripPaymentHelp(models.Model):
-    erip_link = models.CharField(
-        max_length=355, blank=True, null=True, verbose_name="Ссылка")
-    erip_instructions = models.CharField(
-        max_length=1355, blank=True, null=True, verbose_name="Инструкция")
+    erip_link = models.CharField(max_length=355, blank=True, null=True, verbose_name="Ссылка")
+    erip_instructions = models.CharField(max_length=1355, blank=True, null=True, verbose_name="Инструкция")
 
     class Meta:
         db_table = "erip_payment_help"
@@ -240,12 +219,11 @@ class PartnerCategory(models.Model):
 
 
 class PartnerClientBonus(models.Model):
-    category = models.ForeignKey(
-        PartnerCategory, on_delete=models.CASCADE, verbose_name="Категория"
-    )
+    category = models.ForeignKey(PartnerCategory, on_delete=models.CASCADE, verbose_name="Категория")
     partner_name = models.CharField(max_length=155, verbose_name="Название партнера")
     description = models.CharField(verbose_name="Описание", null=True, blank=True)
     code = models.CharField(max_length=155, verbose_name="Промо-код", null=True, blank=True)
+    image = models.ImageField(upload_to="partner_bonuses/", blank=True, null=True, verbose_name="Изображение")
 
     class Meta:
         db_table = "partner_bonus"
@@ -278,25 +256,9 @@ class SocialLink(models.Model):
 
 class BroadcastMessage(models.Model):
     message_text = models.TextField(verbose_name="Текст сообщения")
-    image = models.ImageField(
-        upload_to='broadcast_images/',
-        blank=True,
-        null=True,
-        verbose_name="Изображение"
-    )
-    status_filter = models.CharField(
-        max_length=5,
-        choices=AppUser.CLIENT_STATUS,
-        blank=True,
-        null=True,
-        verbose_name="Фильтр по статусу (оставьте пустым для всех)"
-    )
-    task_id = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        verbose_name="ID задачи Celery"
-    )
+    image = models.ImageField(upload_to="broadcast_images/", blank=True, null=True, verbose_name="Изображение")
+    status_filter = models.CharField(max_length=5, choices=AppUser.CLIENT_STATUS, blank=True, null=True, verbose_name="Фильтр по статусу (оставьте пустым для всех)")
+    task_id = models.CharField(max_length=255, blank=True, null=True, verbose_name="ID задачи Celery")
 
     class Meta:
         verbose_name = "Рассылка"
