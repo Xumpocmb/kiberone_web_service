@@ -26,6 +26,10 @@ ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
     "0.0.0.0",
+    "http://kiber-resume.of.by",
+    "https://kiber-resume.of.by",
+    "http://93.85.88.72",
+    "https://93.85.88.72",
 ]
 
 # ======================
@@ -75,6 +79,10 @@ else:
         "http://localhost:8000",
         "http://127.0.0.1:8000",
         "http://0.0.0.0:8000",
+        "http://kiber-resume.of.by",
+        "https://kiber-resume.of.by",
+        "http://93.85.88.72",
+        "https://93.85.88.72",
     ]
 
 # ======================
