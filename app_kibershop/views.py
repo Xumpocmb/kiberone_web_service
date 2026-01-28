@@ -3,6 +3,7 @@ from urllib import response
 import gspread
 from django.contrib import messages
 from django.db.models import Sum, F
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from oauth2client.service_account import ServiceAccountCredentials
@@ -226,3 +227,36 @@ def profile_page(request):
         "total_quantity": total_quantity,
     }
     return render(request, "app_kibershop/profile_page.html", context=context)
+
+
+def get_orders_list(request):
+    """
+    View that returns a JSON response with a list of all orders
+    """
+    orders = Order.objects.all().select_related("user").prefetch_related("items__product")
+
+    orders_data = []
+    for order in orders:
+        order_data = {
+            "id": order.id,
+            "user_id": order.user.id,
+            "user_name": order.user.name,
+            "user_email": getattr(order.user, "email", ""),
+            "items": [],
+        }
+
+        for item in order.items.all():
+            order_data["items"].append(
+                {
+                    "id": item.id,
+                    "product_id": item.product.id,
+                    "product_name": item.product.name,
+                    "product_price": item.product.price,
+                    "quantity": item.quantity,
+                    "total_price": item.product.price * item.quantity,
+                }
+            )
+
+        orders_data.append(order_data)
+
+    return JsonResponse({"orders": orders_data, "count": len(orders_data)})
