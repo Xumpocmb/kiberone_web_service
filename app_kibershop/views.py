@@ -10,7 +10,7 @@ from oauth2client.service_account import ServiceAccountCredentials
 from gspread.utils import rowcol_to_a1
 from app_api.alfa_crm_service.crm_service import get_client_kiberons, spent_client_kiberons
 from app_kiberclub.models import Client, Location
-from app_kibershop.models import Category, Product, Cart, Order, OrderItem, OrderAvailabilitySettings
+from app_kibershop.models import Category, Product, Cart, Order, OrderItem, OrderAvailabilitySettings, RunningLine
 
 
 CREDENTIALS_FILE = "kiberone-tg-bot-a43691efe721.json"
@@ -18,8 +18,17 @@ CREDENTIALS_FILE = "kiberone-tg-bot-a43691efe721.json"
 
 def catalog_view(request):
     categories = Category.objects.all()
+
+    # Add running line to context
+    running_line = RunningLine.objects.first()
+    if running_line and running_line.is_active:
+        running_line_text = running_line.text
+    else:
+        running_line_text = None
+
     context = {
         "categories": categories,
+        "running_line_text": running_line_text,
     }
     return render(request, "app_kibershop/catalog.html", context)
 

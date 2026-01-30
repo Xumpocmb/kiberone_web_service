@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from app_kibershop.models import Category, Product, OrderItem, Order, Cart, OrderAvailabilitySettings
+from app_kibershop.models import Category, Product, OrderItem, Order, Cart, OrderAvailabilitySettings, RunningLine
 
 
 @admin.register(Category)
@@ -38,3 +38,19 @@ class OrderAvailabilitySettingsAdmin(admin.ModelAdmin):
     list_editable = ("is_available",)
     list_display_links = ("unavailable_message",)
     fields = ("is_available", "unavailable_message")
+
+
+@admin.register(RunningLine)
+class RunningLineAdmin(admin.ModelAdmin):
+    list_display = ('id', 'text', 'is_active')
+    list_editable = ('is_active',)
+    list_filter = ('is_active',)
+    search_fields = ('text',)
+    list_per_page = 20
+
+    def has_add_permission(self, request):
+        # Allow only one instance of RunningLine
+        count = RunningLine.objects.count()
+        if count == 0:
+            return True
+        return False

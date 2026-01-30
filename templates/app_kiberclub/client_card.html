@@ -40,11 +40,13 @@
             <a href="{{ portfolio_link }}" id="portfolioLink" target="_blank">Портфолио</a>
         </section>
 
+        {% if running_line_text %}
         <div id="warning">
             <p class="warningText">
-                КИБЕРШОП ЗАКРЫТ! Ваш заказ вы получите на занятии в период с 25.05 по 31.05.
+                {{ running_line_text }}
             </p>
         </div>
+        {% endif %}
 
         <section id="extraInfo">
             <p>Тема следующего занятия:</p>

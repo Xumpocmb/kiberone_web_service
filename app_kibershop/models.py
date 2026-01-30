@@ -105,3 +105,19 @@ class OrderAvailabilitySettings(models.Model):
 
     def __str__(self):
         return f'Настройки доступности заказов: {"Доступны" if self.is_available else "Недоступны"}'
+
+
+class RunningLine(models.Model):
+    """
+    Модель для бегущей строки на странице каталога
+    """
+
+    text = models.TextField(verbose_name="Текст бегущей строки", blank=True, null=True)
+    is_active = models.BooleanField(default=True, verbose_name="Показывать бегущую строку")
+
+    class Meta:
+        verbose_name = "Бегущая строка"
+        verbose_name_plural = "Бегущие строки"
+
+    def __str__(self):
+        return f"Бегущая строка: {'Активна' if self.is_active else 'Неактивна'}"

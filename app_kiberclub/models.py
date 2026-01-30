@@ -282,3 +282,19 @@ class GiftLink(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class RunningLine(models.Model):
+    """
+    Модель для бегущей строки на странице клиента
+    """
+
+    text = models.TextField(verbose_name="Текст бегущей строки", blank=True, null=True)
+    is_active = models.BooleanField(default=True, verbose_name="Показывать бегущую строку")
+
+    class Meta:
+        verbose_name = "Бегущая строка"
+        verbose_name_plural = "Бегущие строки"
+
+    def __str__(self):
+        return f"Бегущая строка: {'Активна' if self.is_active else 'Неактивна'}"

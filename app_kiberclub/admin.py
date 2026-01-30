@@ -20,7 +20,7 @@ from app_kiberclub.models import (
     SalesManager,
     SocialLink,
     Location,
-    Manager, BroadcastMessage,
+    Manager, BroadcastMessage, RunningLine,
 )
 
 logger = logging.getLogger(__name__)
@@ -194,3 +194,19 @@ class BroadcastMessageAdmin(admin.ModelAdmin):
 
 
 admin.site.register(GiftLink)
+
+
+@admin.register(RunningLine)
+class RunningLineAdmin(admin.ModelAdmin):
+    list_display = ('id', 'text', 'is_active')
+    list_editable = ('is_active',)
+    list_filter = ('is_active',)
+    search_fields = ('text',)
+    list_per_page = 20
+
+    def has_add_permission(self, request):
+        # Allow only one instance of RunningLine
+        count = RunningLine.objects.count()
+        if count == 0:
+            return True
+        return False

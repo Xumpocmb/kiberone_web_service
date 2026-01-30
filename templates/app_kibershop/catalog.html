@@ -28,9 +28,11 @@
     </section>
 
     <section class="productListSection">
+        {% if running_line_text %}
         <div style="margin-top: -3vw; margin-bottom: 2vh; width: 100vw;" id="warning">
-            <p class="warningText">КИБЕРШОП ЗАКРЫТ! Ваш заказ вы получите на занятии в период с 25.05 по 31.05.</p>
+            <p class="warningText">{{ running_line_text }}</p>
         </div>
+        {% endif %}
         {% for category in categories %}
             <section class="sectionTitle">
                 <span>{{ category.name }}</span>

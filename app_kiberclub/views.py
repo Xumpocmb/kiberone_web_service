@@ -14,7 +14,7 @@ from app_api.alfa_crm_service.crm_service import (
     get_client_lesson_name,
     get_client_kiberons,
 )
-from app_kiberclub.models import AppUser, Client, Location
+from app_kiberclub.models import AppUser, Client, Location, RunningLine
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 
@@ -155,6 +155,13 @@ def open_profile(request):
                         "kiberons_count": kiberons if kiberons else "0",
                     }
                 )
+
+                # Add running line to context
+                running_line = RunningLine.objects.first()
+                if running_line and running_line.is_active:
+                    context["running_line_text"] = running_line.text
+                else:
+                    context["running_line_text"] = None
 
                 return render(request, "app_kiberclub/client_card.html", context)
             else:
